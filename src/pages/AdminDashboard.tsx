@@ -45,6 +45,19 @@ export default function AdminDashboard() {
     message: ''
   });
 
+  // Customer Edit/Delete State
+  const [isEditCustomerDialogOpen, setIsEditCustomerDialogOpen] = useState(false);
+  const [isDeleteCustomerDialogOpen, setIsDeleteCustomerDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any>(null);
+  const [deletingCustomerId, setDeletingCustomerId] = useState<string | null>(null);
+  const [editCustomerForm, setEditCustomerForm] = useState({
+    name: '',
+    age: '',
+    phone: ''
+  });
+
+
+
   useEffect(() => {
     // Check if logged in
     const token = localStorage.getItem('adminToken');
@@ -188,6 +201,73 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       toast.error("Failed to update status");
+    }
+  };
+
+
+
+  // Customer Handlers
+  const handleEditCustomerClick = (customer: any) => {
+    setEditingCustomer(customer);
+    setEditCustomerForm({
+      name: customer.fullName || customer.name,
+      age: customer.age,
+      phone: customer.phone
+    });
+    setIsEditCustomerDialogOpen(true);
+  };
+
+  const handleSaveEditCustomer = async () => {
+    if (!editingCustomer) return;
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      // Note: backend expects 'name' but displays as 'fullName' in some contexts
+      const response = await fetch(`${API_BASE_URL}/customers/${editingCustomer._id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editCustomerForm)
+      });
+
+      if (response.ok) {
+        toast.success("Customer updated successfully");
+        loadDashboardData();
+        setIsEditCustomerDialogOpen(false);
+      } else {
+        toast.error("Failed to update customer");
+      }
+    } catch (error) {
+      toast.error("Error updating customer");
+    }
+  };
+
+  const handleDeleteCustomerClick = (customerId: string) => {
+    setDeletingCustomerId(customerId);
+    setIsDeleteCustomerDialogOpen(true);
+  };
+
+  const confirmDeleteCustomer = async () => {
+    if (!deletingCustomerId) return;
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/customers/${deletingCustomerId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        toast.success("Customer and their orders deleted successfully");
+        loadDashboardData();
+        setIsDeleteCustomerDialogOpen(false);
+      } else {
+        toast.error("Failed to delete customer");
+      }
+    } catch (error) {
+      toast.error("Error deleting customer");
     }
   };
 
@@ -478,6 +558,24 @@ export default function AdminDashboard() {
                             <span className="text-green-600 font-medium">💰 ₹{customer.totalSpent}</span>
                           </div>
                         </div>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-blue-600 hover:text-blue-700"
+                            onClick={() => handleEditCustomerClick(customer)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteCustomerClick(customer._id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -755,6 +853,64 @@ export default function AdminDashboard() {
             </Dialog>
           </div>
         )}
+
+        {/* Edit Customer Dialog */}
+        <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Customer</DialogTitle>
+              <DialogDescription>Update profile for {editingCustomer?.fullName || editingCustomer?.name}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="custName">Name</Label>
+                <Input
+                  id="custName"
+                  value={editCustomerForm.name}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="custAge">Age</Label>
+                <Input
+                  id="custAge"
+                  value={editCustomerForm.age}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, age: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="custPhone">Phone</Label>
+                <Input
+                  id="custPhone"
+                  value={editCustomerForm.phone}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, phone: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditCustomerDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveEditCustomer}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Customer Dialog */}
+        <Dialog open={isDeleteCustomerDialogOpen} onOpenChange={setIsDeleteCustomerDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Customer</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this customer?
+                <br />
+                <span className="text-red-500 font-bold">Warning: This will also delete ALL their orders!</span>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteCustomerDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmDeleteCustomer}>Delete Customer</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -99,4 +99,54 @@ router.get('/customer-profile/:phone', async (req, res) => {
     }
 });
 
+// PATCH /customers/:id - Update customer details
+router.patch('/customers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+
+        const customer = await Customer.findByIdAndUpdate(id, updates, { new: true });
+
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Customer updated successfully',
+            data: customer
+        });
+    } catch (error) {
+        console.error('Error updating customer:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// DELETE /customers/:id - Delete customer and optionally their orders
+router.delete('/customers/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const customer = await Customer.findById(id);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        // Delete the customer
+        await Customer.findByIdAndDelete(id);
+
+        // Optionally delete all orders associated with this customer
+        // We use the phone number to link orders, so we delete orders with that phone
+        await Order.deleteMany({ phone: customer.phone });
+
+        res.status(200).json({
+            success: true,
+            message: 'Customer and associated orders deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting customer:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 export default router;
