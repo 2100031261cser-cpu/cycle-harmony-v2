@@ -659,7 +659,7 @@ export default function AdminDashboard() {
                   <div className="space-y-3">
                     {filteredOrders.map((order: any) => (
                       <div key={order._id} className="p-4 bg-gray-50 rounded-lg border hover:border-pink-200 transition-colors">
-                        <div className="flex justify-between items-start mb-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-semibold text-lg">Order: {order.orderId || order._id.slice(-6).toUpperCase()}</p>
@@ -670,14 +670,17 @@ export default function AdminDashboard() {
                               Placed on: {new Date(order.createdAt).toLocaleString()}
                             </p>
                           </div>
-                          <div className="flex flex-col items-end gap-2 text-right">
-                            <p className="font-bold text-xl text-green-600">₹{order.totalPrice}</p>
-                            <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-start md:items-end gap-2 text-left md:text-right w-full md:w-auto">
+                            <div className="flex justify-between w-full md:w-auto md:block mb-2 md:mb-0">
+                              <span className="md:hidden font-medium text-gray-600">Total:</span>
+                              <p className="font-bold text-xl text-green-600">₹{order.totalPrice}</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                               <Select
                                 value={order.orderStatus}
                                 onValueChange={(value) => handleStatusUpdate(order._id, value)}
                               >
-                                <SelectTrigger className="w-[130px] h-8 text-xs">
+                                <SelectTrigger className="w-full md:w-[130px] h-8 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -690,22 +693,24 @@ export default function AdminDashboard() {
                                 </SelectContent>
                               </Select>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 px-2 text-blue-600 hover:text-blue-700"
-                                onClick={() => handleEditClick(order)}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleDeleteClick(order._id)}
-                              >
-                                Delete
-                              </Button>
+                              <div className="flex gap-2 ml-auto md:ml-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 px-2 text-blue-600 hover:text-blue-700 flex-1 md:flex-none"
+                                  onClick={() => handleEditClick(order)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 md:flex-none"
+                                  onClick={() => handleDeleteClick(order._id)}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
