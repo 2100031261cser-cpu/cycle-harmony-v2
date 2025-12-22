@@ -601,6 +601,8 @@ export default function AdminDashboard() {
                             size="sm"
                             className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleDeleteCustomerClick(customer._id)}
+                            disabled={!customer._id}
+                            title={!customer._id ? "Customer profile not created yet (Order only)" : "Delete Customer"}
                           >
                             Delete
                           </Button>
