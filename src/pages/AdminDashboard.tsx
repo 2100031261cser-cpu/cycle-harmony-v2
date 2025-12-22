@@ -534,12 +534,12 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {stats.recentOrders.map((order: any) => (
-                      <div key={order._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div key={order._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
                         <div className="flex-1">
-                          <p className="font-medium">{order.orderId || order._id}</p>
-                          <p className="text-sm text-gray-500">{order.fullName} | {order.phone}</p>
+                          <p className="font-medium text-sm sm:text-base break-all">{order.orderId || order._id}</p>
+                          <p className="text-xs sm:text-sm text-gray-500">{order.fullName} | {order.phone}</p>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
                           {getStatusBadge(order.orderStatus)}
                           <span className="font-medium">₹{order.totalPrice}</span>
                         </div>
