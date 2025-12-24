@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Package, Truck, CheckCircle, LogOut, MapPin, Phone, User, Calendar } from "lucide-react";
+import { Package, Truck, CheckCircle, LogOut, MapPin, Phone, User, Calendar, RefreshCw } from "lucide-react";
 
 interface Order {
     _id: string;
@@ -19,6 +19,8 @@ interface Order {
         pincode: string;
         city: string;
         state: string;
+        mapLink?: string;
+        label?: string;
     };
     totalPrice: number;
     totalQuantity: number;
@@ -37,6 +39,13 @@ export default function DeliveryDashboard() {
     useEffect(() => {
         checkAuth();
         loadOrders();
+
+        // Auto-refresh every 10 seconds to sync assigned orders
+        const interval = setInterval(() => {
+            loadOrders(false);
+        }, 10000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const checkAuth = () => {
@@ -47,9 +56,9 @@ export default function DeliveryDashboard() {
         }
     };
 
-    const loadOrders = async () => {
+    const loadOrders = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             const token = localStorage.getItem("deliveryToken") || localStorage.getItem("adminToken"); // Fallback if tested with admin token
             // In a real app, we'd have a specific endpoint or backend filtering.
             // For now, we fetch all and filter client-side or assume backend returns relevant ones.
@@ -73,9 +82,9 @@ export default function DeliveryDashboard() {
             }
         } catch (error) {
             console.error("Error loading orders:", error);
-            toast.error("Failed to load orders");
+            if (showLoading) toast.error("Failed to load orders");
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     };
 
@@ -128,10 +137,16 @@ export default function DeliveryDashboard() {
             </div>
 
             <div className="container mx-auto px-4 py-6">
-                <div className="flex items-center gap-2 mb-6">
-                    <Truck className="w-6 h-6 text-blue-600" />
-                    <h2 className="text-lg font-semibold text-gray-800">Assigned Orders</h2>
-                    <Badge variant="secondary" className="ml-2">{orders.filter(o => o.orderStatus === 'Shipped').length} Pending</Badge>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <Truck className="w-6 h-6 text-blue-600" />
+                        <h2 className="text-lg font-semibold text-gray-800">Assigned Orders</h2>
+                        <Badge variant="secondary" className="ml-2">{orders.filter(o => o.orderStatus === 'Shipped').length} Pending</Badge>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => loadOrders(true)} title="Refresh Orders">
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Refresh
+                    </Button>
                 </div>
 
                 {loading ? (
@@ -199,12 +214,13 @@ export default function DeliveryDashboard() {
                                                     {order.address.landmark && <p className="text-xs text-gray-500 mt-0.5">Note: {order.address.landmark}</p>}
                                                     <p className="font-medium mt-1">{order.address.city}, {order.address.pincode}</p>
                                                     <a
-                                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.address.house}, ${order.address.area}, ${order.address.city}, ${order.address.pincode}`)}`}
+                                                        href={order.address.mapLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${order.address.house}, ${order.address.area}, ${order.address.city}, ${order.address.pincode}`)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                                                        className="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline mt-2 inline-flex items-center gap-1"
                                                     >
-                                                        Get Directions
+                                                        <MapPin className="w-3 h-3" />
+                                                        Get Directions (Map)
                                                     </a>
                                                 </div>
                                             </div>

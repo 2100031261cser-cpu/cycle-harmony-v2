@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Users, ShoppingCart, DollarSign, TrendingUp, Search,
-  LogOut, Package, CheckCircle, Clock, Truck, XCircle, RefreshCw, Download
+  LogOut, Package, CheckCircle, Clock, Truck, XCircle, RefreshCw, Download, MapPin, BarChart3,
+  Trash2, Edit, MessageSquare, Eye, MoreHorizontal, Calendar, PieChart, ChevronRight, LineChart,
+  FileText, Filter
 } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -22,9 +24,15 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [customers, setCustomers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<'overview' | 'customers' | 'orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'customers' | 'orders' | 'reports'>('overview');
+  const [reportCategory, setReportCategory] = useState<'summary' | 'revenue' | 'orders_report' | 'customers' | 'inventory'>('revenue');
+  const [reportMonth, setReportMonth] = useState<string>((new Date().getMonth() + 1).toString());
+  const [reportYear, setReportYear] = useState<string>(new Date().getFullYear().toString());
+  const [mobileReportsSidebarOpen, setMobileReportsSidebarOpen] = useState(false);
   const [orderFilter, setOrderFilter] = useState<string>('all');
+  const [isExporting, setIsExporting] = useState(false);
 
   // Edit/Delete State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -57,6 +65,11 @@ export default function AdminDashboard() {
   });
 
 
+
+
+  // View Message State
+  const [viewMessageOpen, setViewMessageOpen] = useState(false);
+  const [viewMessageData, setViewMessageData] = useState<{ title: string, message: string } | null>(null);
 
   useEffect(() => {
     // Check if logged in
@@ -320,7 +333,157 @@ export default function AdminDashboard() {
         toast.error("Failed to delete order");
       }
     } catch (error) {
+      console.error('Error deleting order:', error); // Corrected error message for clarity
       toast.error("Error deleting order");
+    }
+  };
+
+  const [summaryData, setSummaryData] = useState<any>(null);
+  const [ordersReportData, setOrdersReportData] = useState<any[]>([]);
+
+  const fetchRevenueData = async () => {
+    try {
+      setLoading(true);
+      const url = `${API_BASE_URL}/orders/revenue-chart?month=${reportMonth}&year=${reportYear}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setRevenueData(data.data);
+        if (data.data.length === 0) {
+          toast.info(`No revenue data found for ${reportMonth}/${reportYear}`);
+        } else {
+          toast.success("Revenue data updated");
+        }
+      } else {
+        console.error('Server reported failure:', data);
+        toast.error(data.message || "Failed to fetch revenue reports");
+      }
+    } catch (error) {
+      console.error('Error fetching revenue data:', error);
+      toast.error("Network error fetching reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMonthlySummary = async () => {
+    try {
+      setLoading(true);
+      const url = `${API_BASE_URL}/orders/monthly-summary?month=${reportMonth}&year=${reportYear}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setSummaryData(data.data);
+      } else {
+        toast.error(data.message || "Failed to fetch summary");
+      }
+    } catch (error) {
+      toast.error("Error fetching summary");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrdersReport = async () => {
+    try {
+      setLoading(true);
+      const url = `${API_BASE_URL}/orders/report?month=${reportMonth}&year=${reportYear}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.success) {
+        setOrdersReportData(data.data);
+        if (data.data.length === 0) toast.info("No orders found for this period");
+      } else {
+        toast.error(data.message || "Failed to fetch orders report");
+      }
+    } catch (error) {
+      toast.error("Error fetching orders report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial Data Fetch
+  useEffect(() => {
+    loadDashboardData();
+  }, [orderFilter]); // Re-fetch when filter changes
+
+  // Fetch Revenue Data when category is 'revenue' and filters change
+  // Fetch Report Data when category or filters change
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      if (reportCategory === 'revenue') fetchRevenueData();
+      if (reportCategory === 'summary') fetchMonthlySummary();
+      if (reportCategory === 'orders_report') fetchOrdersReport();
+    }
+  }, [activeTab, reportCategory, reportMonth, reportYear]);
+
+  const handleApplyFilter = () => {
+    if (reportCategory === 'revenue') fetchRevenueData();
+    if (reportCategory === 'summary') fetchMonthlySummary();
+    if (reportCategory === 'orders_report') fetchOrdersReport();
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsExporting(true);
+      toast.info("Generating PDF report...");
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/orders/export/pdf?month=${reportMonth}&year=${reportYear}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to generate PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders-report-${reportYear}-${reportMonth.padStart(2, '0')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("PDF Downloaded successfully");
+    } catch (error) {
+      console.error("PDF Download Error:", error);
+      toast.error("Failed to download PDF report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadReportCSV = async () => {
+    try {
+      setIsExporting(true);
+      toast.info("Generating CSV export...");
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/orders/export/csv?month=${reportMonth}&year=${reportYear}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Failed to generate CSV');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `orders-report-${reportYear}-${reportMonth.padStart(2, '0')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("CSV Exported successfully");
+    } catch (error) {
+      console.error("CSV Export Error:", error);
+      toast.error("Failed to export CSV");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -370,20 +533,20 @@ export default function AdminDashboard() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, any> = {
-      Pending: { color: "bg-yellow-500", icon: Clock },
-      Confirmed: { color: "bg-blue-500", icon: CheckCircle },
-      Processing: { color: "bg-purple-500", icon: Package },
-      Shipped: { color: "bg-indigo-500", icon: Truck },
-      Delivered: { color: "bg-green-500", icon: CheckCircle },
-      Cancelled: { color: "bg-red-500", icon: XCircle },
+      Pending: { color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock },
+      Confirmed: { color: "bg-blue-100 text-blue-800 border-blue-200", icon: CheckCircle },
+      Processing: { color: "bg-purple-100 text-purple-800 border-purple-200", icon: Package },
+      Shipped: { color: "bg-indigo-100 text-indigo-800 border-indigo-200", icon: Truck },
+      Delivered: { color: "bg-green-100 text-green-800 border-green-200", icon: CheckCircle },
+      Cancelled: { color: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
     };
 
     const variant = variants[status] || variants.Pending;
     const Icon = variant.icon;
 
     return (
-      <Badge className={`${variant.color} text-white`}>
-        <Icon className="w-3 h-3 mr-1" />
+      <Badge variant="outline" className={`${variant.color} border px-3 py-1 text-xs font-semibold rounded-full shadow-sm`}>
+        <Icon className="w-3.5 h-3.5 mr-1.5" />
         {status}
       </Badge>
     );
@@ -440,22 +603,27 @@ export default function AdminDashboard() {
     );
   }
 
+  // Calculate Reports Stats
+  const reportTotalRevenue = revenueData.reduce((acc, curr) => acc + curr.revenue, 0);
+  const reportTotalOrders = revenueData.reduce((acc, curr) => acc + curr.count, 0);
+  const reportAvgOrderValue = reportTotalOrders > 0 ? Math.round(reportTotalRevenue / reportTotalOrders) : 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm backdrop-blur-md bg-opacity-90">
+        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-sm text-gray-500">Cycle Harmony Laddus CRM</p>
+              <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Admin Dashboard</h1>
+              <p className="text-sm font-medium text-green-600 mt-1">Cycle Harmony Laddus CRM</p>
             </div>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={handleLogout}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-5 w-5" />
               Logout
             </Button>
           </div>
@@ -485,96 +653,116 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-8 bg-gray-100/50 p-1.5 rounded-lg border border-gray-100 inline-flex">
           <Button
-            variant={activeTab === 'overview' ? 'default' : 'outline'}
+            variant={activeTab === 'overview' ? 'default' : 'ghost'}
+            className={`rounded-md ${activeTab === 'overview' ? 'shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             onClick={() => setActiveTab('overview')}
           >
             Overview
           </Button>
           <Button
-            variant={activeTab === 'customers' ? 'default' : 'outline'}
+            variant={activeTab === 'customers' ? 'default' : 'ghost'}
+            className={`rounded-md ${activeTab === 'customers' ? 'shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             onClick={() => setActiveTab('customers')}
           >
             Customers
           </Button>
           <Button
-            variant={activeTab === 'orders' ? 'default' : 'outline'}
+            variant={activeTab === 'orders' ? 'default' : 'ghost'}
+            className={`rounded-md ${activeTab === 'orders' ? 'shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
             onClick={() => setActiveTab('orders')}
           >
             Orders
+          </Button>
+          <Button
+            variant={activeTab === 'reports' ? 'default' : 'ghost'}
+            className={`rounded-md ${activeTab === 'reports' ? 'shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+            onClick={() => setActiveTab('reports')}
+          >
+            Reports
           </Button>
         </div>
 
         {/* Overview Tab */}
         {activeTab === 'overview' && stats && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden">
+                <div className="h-1 w-full bg-blue-500"></div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Customers</CardTitle>
+                  <Users className="h-5 w-5 text-blue-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.overview.totalCustomers}</div>
+                  <div className="text-3xl font-bold text-gray-900">{stats.overview.totalCustomers}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden">
+                <div className="h-1 w-full bg-purple-500"></div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Orders</CardTitle>
+                  <ShoppingCart className="h-5 w-5 text-purple-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.overview.totalOrders}</div>
+                  <div className="text-3xl font-bold text-gray-900">{stats.overview.totalOrders}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden">
+                <div className="h-1 w-full bg-green-500"></div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Revenue</CardTitle>
+                  <DollarSign className="h-5 w-5 text-green-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.overview.totalRevenue}</div>
+                  <div className="text-3xl font-bold text-gray-900">₹{stats.overview.totalRevenue.toLocaleString()}</div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-none shadow-sm hover:shadow-md transition-shadow bg-white rounded-xl overflow-hidden">
+                <div className="h-1 w-full bg-orange-500"></div>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Delivered</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">Delivered</CardTitle>
+                  <TrendingUp className="h-5 w-5 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.orderStatus.delivered}</div>
+                  <div className="text-3xl font-bold text-gray-900">{stats.orderStatus.delivered}</div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Recent Orders */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>Latest 10 orders</CardDescription>
+            <Card className="border border-gray-100 shadow-sm rounded-xl bg-white">
+              <CardHeader className="border-b border-gray-50 bg-gray-50/50 rounded-t-xl py-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-bold text-gray-800">Recent Orders</CardTitle>
+                  <Badge variant="secondary" className="font-normal">Latest 10</Badge>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {stats.recentOrders.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">No recent orders</p>
+                  <div className="text-center py-12">
+                    <Package className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">No recent orders found</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="divide-y divide-gray-100">
                     {stats.recentOrders.map((order: any) => (
-                      <div key={order._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm sm:text-base break-all">{order.orderId || order._id}</p>
-                          <p className="text-xs sm:text-sm text-gray-500">{order.fullName} | {order.phone}</p>
+                      <div key={order._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-gray-50 transition-colors gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-mono text-sm font-semibold text-gray-700 truncate">#{order.orderId || order._id.slice(-6)}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-gray-900 font-medium truncate">{order.fullName}</p>
+                            <span className="text-gray-300">•</span>
+                            <p className="text-sm text-gray-500 truncate">{order.phone}</p>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                        <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                           {getStatusBadge(order.orderStatus)}
-                          <span className="font-medium">₹{order.totalPrice}</span>
+                          <span className="font-bold text-gray-900 min-w-[3rem] text-right">₹{order.totalPrice}</span>
                         </div>
                       </div>
                     ))}
@@ -695,106 +883,149 @@ export default function AdminDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {filteredOrders.map((order: any) => (
-                      <div key={order._id} className="p-4 bg-gray-50 rounded-lg border hover:border-pink-200 transition-colors">
-                        <div className="flex flex-col md:flex-row justify-between items-start mb-4 gap-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <p className="font-semibold text-lg">Order: {order.orderId || order._id.slice(-6).toUpperCase()}</p>
-                              {getStatusBadge(order.orderStatus)}
-                            </div>
-                            <p className="text-sm font-medium text-gray-900">{order.fullName} | {order.phone}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Placed on: {new Date(order.createdAt).toLocaleString()}
-                            </p>
+                      <div key={order._id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden group">
+                        {/* Header: ID, Date, Status */}
+                        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="flex items-center gap-3">
+                            <span className="font-mono text-sm font-bold text-gray-700 bg-white border px-2 py-1 rounded">
+                              #{order.orderId || order._id.slice(-6).toUpperCase()}
+                            </span>
+                            <span className="text-xs text-gray-500 flex items-center">
+                              <Clock className="w-3.5 h-3.5 mr-1" />
+                              {new Date(order.createdAt).toLocaleString(undefined, {
+                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                              })}
+                            </span>
                           </div>
-                          <div className="flex flex-col items-start md:items-end gap-2 text-left md:text-right w-full md:w-auto">
-                            <div className="flex justify-between w-full md:w-auto md:block mb-2 md:mb-0">
-                              <span className="md:hidden font-medium text-gray-600">Total:</span>
-                              <p className="font-bold text-xl text-green-600">₹{order.totalPrice}</p>
+                          {getStatusBadge(order.orderStatus)}
+                        </div>
+
+                        <div className="p-6">
+                          {/* Customer & Price Row */}
+                          <div className="flex flex-col md:flex-row justify-between mb-8 gap-6">
+                            <div>
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Customer</p>
+                              <h3 className="text-xl font-bold text-gray-900 leading-tight mb-1">{order.fullName}</h3>
+                              <a href={`tel:${order.phone}`} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-green-600 transition-colors">
+                                <Users className="w-4 h-4 mr-2" />
+                                {order.phone}
+                              </a>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                              <Select
-                                value={order.orderStatus}
-                                onValueChange={(value) => handleStatusUpdate(order._id, value)}
-                              >
-                                <SelectTrigger className="w-full md:w-[130px] h-8 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Pending">Pending</SelectItem>
-                                  <SelectItem value="Confirmed">Confirmed</SelectItem>
-                                  <SelectItem value="Processing">Processing</SelectItem>
-                                  <SelectItem value="Shipped">Shipped</SelectItem>
-                                  <SelectItem value="Delivered">Delivered</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <div className="md:text-right">
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Amount</p>
+                              <p className="text-3xl font-extrabold text-green-600">₹{order.totalPrice}</p>
+                            </div>
+                          </div>
 
-                              {order.orderStatus === 'Shipped' && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200 hidden md:flex items-center gap-1">
-                                  <Truck className="w-3 h-3" />
-                                  Ram
-                                </Badge>
-                              )}
+                          {/* Details Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Order Details */}
+                            <div className="bg-blue-50/30 rounded-xl p-5 border border-blue-50">
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="bg-blue-100 p-1.5 rounded-lg text-blue-600">
+                                  <Package className="w-4 h-4" />
+                                </div>
+                                <h4 className="font-bold text-gray-800">Order Details</h4>
+                              </div>
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center text-sm border-b border-blue-100/50 pb-2">
+                                  <span className="text-gray-500">Phase</span>
+                                  <span className="font-semibold text-gray-900">{order.phase}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm border-b border-blue-100/50 pb-2">
+                                  <span className="text-gray-500">Quantity</span>
+                                  <span className="font-semibold text-gray-900">{order.totalQuantity} laddus</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-500">Weight</span>
+                                  <span className="font-semibold text-gray-900">{order.totalWeight}g</span>
+                                </div>
+                              </div>
+                            </div>
 
-                              <div className="flex gap-2 ml-auto md:ml-0">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-2 text-blue-600 hover:text-blue-700 flex-1 md:flex-none"
-                                  onClick={() => handleEditClick(order)}
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 md:flex-none"
-                                  onClick={() => handleDeleteClick(order._id)}
-                                >
-                                  Delete
-                                </Button>
+                            {/* Shipping Info */}
+                            <div className="bg-orange-50/30 rounded-xl p-5 border border-orange-50">
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="bg-orange-100 p-1.5 rounded-lg text-orange-600">
+                                  <MapPin className="w-4 h-4" />
+                                </div>
+                                <h4 className="font-bold text-gray-800">Delivery Address</h4>
+                              </div>
+                              <div className="text-sm text-gray-600 space-y-1">
+                                <p className="font-medium text-gray-900">{order.address.house}, {order.address.area}</p>
+                                {order.address.landmark && <p className="text-xs">Near {order.address.landmark}</p>}
+                                <p>{order.address.city} - {order.address.pincode}</p>
+                                <div className="mt-3 flex gap-2">
+                                  <span className="text-xs bg-white border border-gray-200 px-2 py-0.5 rounded text-gray-500 shadow-sm">
+                                    {order.address.label || 'Home'}
+                                  </span>
+                                  {order.address.mapLink && (
+                                    <a href={order.address.mapLink} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-orange-600 hover:text-orange-700 hover:underline flex items-center">
+                                      View Map
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-t pt-4">
-                          <div>
-                            <p className="font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                              <Package className="w-4 h-4" /> Order Details
-                            </p>
-                            <div className="space-y-1 text-gray-600 pl-5">
-                              <p><span className="font-medium">Phase:</span> {order.phase}</p>
-                              <p><span className="font-medium">Quantity:</span> {order.totalQuantity} laddus</p>
-                              <p><span className="font-medium">Weight:</span> {order.totalWeight}g</p>
-                              {order.message && (
-                                <div className="mt-2 p-2 bg-yellow-50 rounded text-xs italic border border-yellow-100">
-                                  " {order.message} "
+                          {/* Message Section */}
+                          {order.message && (
+                            <div className="mt-6">
+                              <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
+                                <div className="flex-1">
+                                  <p className="text-xs font-bold text-gray-500 uppercase mb-1">Customer Message</p>
+                                  <p className="text-sm text-gray-700 italic truncate">"{order.message}"</p>
+                                  {(order.message.length > 50 || order.message.includes('\n')) && (
+                                    <button
+                                      onClick={() => {
+                                        setViewMessageData({ title: `Message from ${order.fullName}`, message: order.message });
+                                        setViewMessageOpen(true);
+                                      }}
+                                      className="text-xs text-blue-600 hover:text-blue-700 font-medium mt-1 hover:underline"
+                                    >
+                                      View Full Message
+                                    </button>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
-                          </div>
+                          )}
 
-                          <div>
-                            <p className="font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                              <Truck className="w-4 h-4" /> Delivery Address
-                            </p>
-                            <div className="space-y-1 text-gray-600 pl-5">
-                              <p>{order.address.house}, {order.address.area}</p>
-                              {order.address.landmark && <p className="text-xs text-gray-500">Landmark: {order.address.landmark}</p>}
-                              <p>Pincode: {order.address.pincode}</p>
-                              <p className="text-xs bg-gray-200 inline-block px-1 rounded">{order.address.label || 'Home'}</p>
+                          {/* Actions Footer */}
+                          <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <Select
+                              value={order.orderStatus}
+                              onValueChange={(value) => handleStatusUpdate(order._id, value)}
+                            >
+                              <SelectTrigger className="w-full md:w-[200px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Pending">Pending</SelectItem>
+                                <SelectItem value="Confirmed">Confirmed</SelectItem>
+                                <SelectItem value="Processing">Processing</SelectItem>
+                                <SelectItem value="Shipped">Shipped</SelectItem>
+                                <SelectItem value="Delivered">Delivered</SelectItem>
+                              </SelectContent>
+                            </Select>
 
-                              {order.address.mapLink && (
-                                <a
-                                  href={order.address.mapLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-pink-600 hover:underline text-xs flex items-center gap-1 mt-1"
-                                >
-                                  View Map
-                                </a>
-                              )}
+                            <div className="flex gap-2 w-full md:w-auto">
+                              <Button
+                                variant="outline"
+                                className="flex-1 md:flex-none border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50"
+                                onClick={() => handleEditClick(order)}
+                              >
+                                <Edit className="w-4 h-4 mr-2" /> Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 md:flex-none border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50"
+                                onClick={() => handleDeleteClick(order._id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Delete
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -933,66 +1164,476 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Edit Customer Dialog */}
-        <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Customer</DialogTitle>
-              <DialogDescription>Update profile for {editingCustomer?.fullName || editingCustomer?.name}</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="custName">Name</Label>
-                <Input
-                  id="custName"
-                  value={editCustomerForm.name}
-                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, name: e.target.value })}
-                />
+        {/* Reports Tab */}
+        {activeTab === 'reports' && (
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left: Reports Sidebar */}
+            <div className="flex flex-col gap-6 w-full lg:w-72 shrink-0">
+              {/* Mobile Toggle */}
+              <div className="lg:hidden">
+                <Button variant="outline" className="w-full flex justify-between" onClick={() => setMobileReportsSidebarOpen(!mobileReportsSidebarOpen)}>
+                  <span className="flex items-center gap-2"><Filter className="w-4 h-4" /> Report Menu</span>
+                  <ChevronRight className={`w-4 h-4 transition-transform ${mobileReportsSidebarOpen ? 'rotate-90' : ''}`} />
+                </Button>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="custAge">Age</Label>
-                <Input
-                  id="custAge"
-                  value={editCustomerForm.age}
-                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, age: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="custPhone">Phone</Label>
-                <Input
-                  id="custPhone"
-                  value={editCustomerForm.phone}
-                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, phone: e.target.value })}
-                />
+
+              <div className={`flex flex-col gap-6 ${mobileReportsSidebarOpen ? 'block' : 'hidden'} lg:flex`}>
+                {/* Section 1: Monthly Report Filter */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                  <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <Calendar className="w-4 h-4 text-green-600" /> Monthly Report
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Select value={reportMonth} onValueChange={setReportMonth}>
+                        <SelectTrigger className="bg-gray-50 border-gray-200">
+                          <SelectValue placeholder="Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                            <SelectItem key={m} value={m.toString()}>
+                              {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={reportYear} onValueChange={setReportYear}>
+                        <SelectTrigger className="bg-gray-50 border-gray-200">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[2024, 2025, 2026].map(y => (
+                            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium h-9" onClick={handleApplyFilter}>
+                      Apply Filter
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Section 2: Report Type */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 overflow-hidden">
+                  <div className="p-4 pb-2">
+                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Report Type</h4>
+                  </div>
+                  <div className="flex flex-col gap-1 p-2">
+                    <Button
+                      variant="ghost"
+                      className={`justify-start ${reportCategory === 'summary' ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      onClick={() => setReportCategory('summary')}
+                    >
+                      <PieChart className="w-4 h-4 mr-3" /> Monthly Summary
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={`justify-start ${reportCategory === 'revenue' ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      onClick={() => setReportCategory('revenue')}
+                    >
+                      <LineChart className="w-4 h-4 mr-3" /> Revenue Report
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={`justify-start ${reportCategory === 'orders_report' ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      onClick={() => setReportCategory('orders_report')}
+                    >
+                      <FileText className="w-4 h-4 mr-3" /> Orders Report
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={`justify-start ${reportCategory === 'customers' ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      onClick={() => setReportCategory('customers')}
+                    >
+                      <Users className="w-4 h-4 mr-3" /> Customer Insights
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className={`justify-start ${reportCategory === 'inventory' ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'}`}
+                      onClick={() => setReportCategory('inventory')}
+                    >
+                      <Package className="w-4 h-4 mr-3" /> Product Inventory
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Section 3: Downloads */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                  <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <Download className="w-4 h-4 text-green-600" /> Downloads
+                  </h4>
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+                      onClick={handleDownloadPDF}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin text-red-500" /> : <FileText className="w-4 h-4 mr-2 text-red-500" />}
+                      Download PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900"
+                      onClick={handleDownloadReportCSV}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? <RefreshCw className="w-4 h-4 mr-2 animate-spin text-green-500" /> : <BarChart3 className="w-4 h-4 mr-2 text-green-500" />}
+                      Export CSV
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditCustomerDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSaveEditCustomer}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
-        {/* Delete Customer Dialog */}
-        <Dialog open={isDeleteCustomerDialogOpen} onOpenChange={setIsDeleteCustomerDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Customer</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this customer?
-                <br />
-                <span className="text-red-500 font-bold">Warning: This will also delete ALL their orders!</span>
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteCustomerDialogOpen(false)}>Cancel</Button>
-              <Button variant="destructive" onClick={confirmDeleteCustomer}>Delete Customer</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            {/* Right: Reports Content Area */}
+            <div className="flex-1 space-y-6">
+              {/* DEFAULT: Revenue Report (Mapped to existing 'sales') */}
+              {reportCategory === 'revenue' && (
+                <div className="space-y-6">
+                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">Revenue Performance</h3>
+                        <p className="text-sm text-gray-500">Sales Trends over time</p>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Revenue Chart */}
+                    <div className="h-64 w-full bg-gradient-to-b from-green-50/50 to-white rounded-lg border border-dashed border-green-100 flex items-end justify-between px-6 pb-0 relative">
+                      {revenueData.length === 0 ? (
+                        <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
+                          No data for this period
+                        </div>
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 flex items-center justify-center text-green-600/10 font-bold text-4xl select-none pointer-events-none">
+                            <LineChart className="w-32 h-32 opacity-10" />
+                          </div>
+                          {revenueData.map((dayStat, i) => {
+                            const maxRevenue = Math.max(...revenueData.map(d => d.revenue), 100); // Avoid div by zero
+                            const heightPercentage = (dayStat.revenue / maxRevenue) * 80 + 5; // Scale to max 85%, min 5%
+
+                            return (
+                              <div
+                                key={i}
+                                className="flex-1 bg-green-500/80 hover:bg-green-600 rounded-t-sm transition-all cursor-pointer relative group mx-[1px]"
+                                style={{ height: `${heightPercentage}%` }}
+                                title={`Day ${dayStat.day}: ₹${dayStat.revenue}`}
+                              >
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap shadow-lg block pointer-events-none">
+                                  <p className="font-bold">₹{dayStat.revenue}</p>
+                                  <p className="text-[9px] opacity-80">{dayStat.count} orders</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
+                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 px-2">
+                      {/* Show partial date labels to avoid clutter */}
+                      {revenueData.length > 0 && revenueData.filter((_, i) => i % 5 === 0).map((d, i) => (
+                        <span key={i}>{d.day}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="border-none shadow-sm bg-blue-50/50">
+                      <CardContent className="p-4">
+                        <p className="text-xs font-bold text-blue-500 uppercase">Total Revenue</p>
+                        <p className="text-2xl font-bold text-blue-900 mt-1">₹{reportTotalRevenue.toLocaleString()}</p>
+                        <p className="text-xs text-blue-400 mt-1 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1" /> {reportTotalOrders} orders this period
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-none shadow-sm bg-purple-50/50">
+                      <CardContent className="p-4">
+                        <p className="text-xs font-bold text-purple-500 uppercase">Avg. Order Value</p>
+                        <p className="text-2xl font-bold text-purple-900 mt-1">₹{reportAvgOrderValue.toLocaleString()}</p>
+                        <p className="text-xs text-purple-400 mt-1 flex items-center">
+                          Based on selected period
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-none shadow-sm bg-orange-50/50">
+                      <CardContent className="p-4">
+                        <p className="text-xs font-bold text-orange-500 uppercase">Total Orders</p>
+                        <p className="text-2xl font-bold text-orange-900 mt-1">{reportTotalOrders}</p>
+                        <p className="text-xs text-orange-400 mt-1">Processed successfully</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Monthly Summary View (New) */}
+              {reportCategory === 'summary' && summaryData && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Phase Analysis */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Phase Breakdown</CardTitle>
+                        <CardDescription>Sales by Cycle Phase (excluding cancellations)</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {summaryData.phaseStats?.map((stat: any) => (
+                            <div key={stat._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-3 h-3 rounded-full ${stat._id === 'Phase 1' ? 'bg-pink-400' : 'bg-purple-400'}`}></div>
+                                <span className="font-medium text-gray-700">{stat._id}</span>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-gray-900">₹{stat.revenue.toLocaleString()}</p>
+                                <p className="text-xs text-gray-500">{stat.count} orders</p>
+                              </div>
+                            </div>
+                          ))}
+                          {(!summaryData.phaseStats || summaryData.phaseStats.length === 0) && (
+                            <p className="text-sm text-gray-400 text-center py-4">No data available</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Status Distribution */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Order Status Distribution</CardTitle>
+                        <CardDescription>Breakdown by current status</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3">
+                          {summaryData.statusStats?.map((stat: any) => (
+                            <div key={stat._id} className="p-3 border border-gray-100 rounded-lg text-center">
+                              {getStatusBadge(stat._id)}
+                              <p className="text-xl font-bold text-gray-900 mt-2">{stat.count}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className="bg-green-600 text-white border-none">
+                    <CardContent className="p-6 flex items-center justify-between">
+                      <div>
+                        <p className="text-green-100 font-medium mb-1">Net Revenue (After Cancellations)</p>
+                        <h3 className="text-3xl font-bold">₹{summaryData.netRevenue?.toLocaleString() || 0}</h3>
+                      </div>
+                      <DollarSign className="w-12 h-12 text-green-400 opacity-50" />
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Orders Report Table View (New) */}
+              {reportCategory === 'orders_report' && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Transactions Report</CardTitle>
+                        <CardDescription>Detailed list of orders for {new Date(0, parseInt(reportMonth) - 1).toLocaleString('default', { month: 'long' })} {reportYear}</CardDescription>
+                      </div>
+                      <Badge variant="outline">{ordersReportData.length} Records</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                          <tr>
+                            <th className="px-6 py-3 font-medium">Date</th>
+                            <th className="px-6 py-3 font-medium">Order ID</th>
+                            <th className="px-6 py-3 font-medium">Customer</th>
+                            <th className="px-6 py-3 font-medium">Phase</th>
+                            <th className="px-6 py-3 font-medium text-right">Amount</th>
+                            <th className="px-6 py-3 font-medium text-right">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {ordersReportData.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                No orders found for this period
+                              </td>
+                            </tr>
+                          ) : ordersReportData.map((order: any) => (
+                            <tr key={order._id} className="hover:bg-gray-50/50">
+                              <td className="px-6 py-3 text-gray-500">
+                                {new Date(order.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-3 font-mono text-gray-600">
+                                #{order.orderId || order._id.slice(-6).toUpperCase()}
+                              </td>
+                              <td className="px-6 py-3">
+                                <p className="font-medium text-gray-900">{order.fullName}</p>
+                                <p className="text-xs text-gray-400">{order.phone}</p>
+                              </td>
+                              <td className="px-6 py-3">
+                                <Badge variant="secondary" className="bg-pink-50 text-pink-700 border-pink-100">{order.phase}</Badge>
+                              </td>
+                              <td className="px-6 py-3 text-right font-bold text-gray-900">
+                                ₹{order.totalPrice}
+                              </td>
+                              <td className="px-6 py-3 text-right">
+                                <span className={`inline-block px-2 py-1 rounded text-xs font-semibold
+                                  ${order.orderStatus === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                    order.orderStatus === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                      'bg-yellow-100 text-yellow-700'}`}>
+                                  {order.orderStatus}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+
+              {/* Customers Report View */}
+              {reportCategory === 'customers' && (
+                <Card className="border-none shadow-sm bg-white rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Customer Demographics</CardTitle>
+                    <CardDescription>Insights about your customer base</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                      <PieChart className="w-16 h-16 text-gray-200 mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900">Demographic Data</h4>
+                      <p className="max-w-sm mx-auto mt-2">
+                        Detailed customer segmentation by location, age group, and purchasing frequency will appear here.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Inventory Report View */}
+              {reportCategory === 'inventory' && (
+                <Card className="border-none shadow-sm bg-white rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Inventory Status</CardTitle>
+                    <CardDescription>Track stock levels and product performance</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                      <Package className="w-16 h-16 text-gray-200 mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900">Stock Alerts</h4>
+                      <p className="max-w-sm mx-auto mt-2">
+                        Low stock warnings, best-selling products prediction, and restocking suggestions will be implemented here.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Orders Report View (New) */}
+              {reportCategory === 'orders_report' && (
+                <Card className="border-none shadow-sm bg-white rounded-xl">
+                  <CardHeader>
+                    <CardTitle>Orders Report</CardTitle>
+                    <CardDescription>Detailed order log for {new Date(0, parseInt(reportMonth) - 1).toLocaleString('default', { month: 'long' })} {reportYear}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                      <FileText className="w-16 h-16 text-gray-200 mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900">Transactional Report</h4>
+                      <p className="max-w-sm mx-auto mt-2">
+                        Detailed table of all transactions and order statuses for the selected period.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={isEditCustomerDialogOpen} onOpenChange={setIsEditCustomerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+            <DialogDescription>Update profile for {editingCustomer?.fullName || editingCustomer?.name}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="custName">Name</Label>
+              <Input
+                id="custName"
+                value={editCustomerForm.name}
+                onChange={(e) => setEditCustomerForm({ ...editCustomerForm, name: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="custAge">Age</Label>
+              <Input
+                id="custAge"
+                value={editCustomerForm.age}
+                onChange={(e) => setEditCustomerForm({ ...editCustomerForm, age: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="custPhone">Phone</Label>
+              <Input
+                id="custPhone"
+                value={editCustomerForm.phone}
+                onChange={(e) => setEditCustomerForm({ ...editCustomerForm, phone: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditCustomerDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEditCustomer}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Customer Dialog */}
+      <Dialog open={isDeleteCustomerDialogOpen} onOpenChange={setIsDeleteCustomerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Customer</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this customer?
+              <br />
+              <span className="text-red-500 font-bold">Warning: This will also delete ALL their orders!</span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteCustomerDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteCustomer}>Delete Customer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* View Message Dialog */}
+      <Dialog open={viewMessageOpen} onOpenChange={setViewMessageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{viewMessageData?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 text-sm leading-relaxed whitespace-pre-wrap">
+              {viewMessageData?.message}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setViewMessageOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-
