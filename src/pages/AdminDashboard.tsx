@@ -84,8 +84,14 @@ export default function AdminDashboard() {
       const searchParams = new URLSearchParams();
       if (searchQuery) searchParams.append('search', searchQuery);
 
-      // Get orders
-      const ordersRes = await fetch(`${API_BASE_URL}/orders?${searchParams.toString()}`, {
+      // Get stats from backend
+      const statsRes = await fetch(`${API_BASE_URL}/orders/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const statsBackend = await statsRes.json();
+
+      // Get recent orders (limited to 10 for performance)
+      const ordersRes = await fetch(`${API_BASE_URL}/orders?limit=10&${searchParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const ordersData = await ordersRes.json();
@@ -102,29 +108,16 @@ export default function AdminDashboard() {
         toast.error(ordersData.message || "Failed to load orders. MongoDB may not be connected.");
         setOrders([]);
         setCustomers([]);
-        setStats({
-          overview: {
-            totalCustomers: 0,
-            totalOrders: 0,
-            totalRevenue: 0,
-            activeCustomers: 0
-          },
-          orderStatus: {
-            pending: 0,
-            delivered: 0
-          },
-          recentOrders: []
-        });
         return;
       }
 
       setOrders(ordersData.data || []);
 
-      // Calculate stats
-      const totalOrders = ordersData.data?.length || 0;
-      const totalRevenue = ordersData.data?.reduce((sum: number, o: any) => sum + (o.totalPrice || 0), 0) || 0;
-      const pendingOrders = ordersData.data?.filter((o: any) => o.orderStatus === 'Pending').length || 0;
-      const deliveredOrders = ordersData.data?.filter((o: any) => o.orderStatus === 'Delivered').length || 0;
+      // Use backend stats
+      const totalOrders = statsBackend.data?.totalOrders || 0;
+      const totalRevenue = statsBackend.data?.totalRevenue || 0;
+      const pendingOrders = statsBackend.data?.pending || 0;
+      const deliveredOrders = statsBackend.data?.delivered || 0;
 
       // Process Customers
       // Start with real customers from DB

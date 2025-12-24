@@ -143,10 +143,42 @@ router.post('/orders', async (req, res) => {
   }
 });
 
+// Stats endpoint
+router.get('/orders/stats', async (req, res) => {
+  try {
+    const stats = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: "$totalPrice" },
+          pending: { $sum: { $cond: [{ $eq: ["$orderStatus", "Pending"] }, 1, 0] } },
+          processing: { $sum: { $cond: [{ $eq: ["$orderStatus", "Processing"] }, 1, 0] } },
+          shipped: { $sum: { $cond: [{ $eq: ["$orderStatus", "Shipped"] }, 1, 0] } },
+          delivered: { $sum: { $cond: [{ $eq: ["$orderStatus", "Delivered"] }, 1, 0] } },
+          cancelled: { $sum: { $cond: [{ $eq: ["$orderStatus", "Cancelled"] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    const result = stats.length > 0 ? stats[0] : {
+      totalOrders: 0, totalRevenue: 0,
+      pending: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0
+    };
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ success: false, message: 'Error fetching stats' });
+  }
+});
+
 // Get all orders (with optional filters)
 router.get('/orders', async (req, res) => {
   try {
     // Check if MongoDB is connected
+
+
     if (mongoose.connection.readyState !== 1) {
       console.warn('⚠️ MongoDB not connected, returning empty orders list');
       return res.status(200).json({

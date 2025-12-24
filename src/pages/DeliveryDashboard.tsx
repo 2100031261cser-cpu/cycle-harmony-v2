@@ -54,13 +54,14 @@ export default function DeliveryDashboard() {
             // In a real app, we'd have a specific endpoint or backend filtering.
             // For now, we fetch all and filter client-side or assume backend returns relevant ones.
             // Since backend doesn't have specific "my-orders" route yet, we fetch all and filter.
-            const res = await fetch(`${API_BASE_URL}/orders`, {
+            // OPTIMIZATION: Fetch only Shipped orders to reduce load time
+            const res = await fetch(`${API_BASE_URL}/orders?status=Shipped`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 const responseData = await res.json();
                 if (responseData.success && responseData.data) {
-                    const shippedOrders = responseData.data.filter((o: Order) => o.orderStatus === 'Shipped' || o.orderStatus === 'Delivered');
+                    const shippedOrders = responseData.data;
                     // Sort: Shipped first, then by date
                     shippedOrders.sort((a: Order, b: Order) => {
                         if (a.orderStatus === 'Shipped' && b.orderStatus !== 'Shipped') return -1;
