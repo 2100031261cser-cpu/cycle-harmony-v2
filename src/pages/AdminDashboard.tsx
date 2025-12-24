@@ -974,7 +974,7 @@ export default function AdminDashboard() {
                             <div className="mt-6">
                               <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
                                 <MessageSquare className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                   <p className="text-xs font-bold text-gray-500 uppercase mb-1">Customer Message</p>
                                   <p className="text-sm text-gray-700 italic truncate">"{order.message}"</p>
                                   {(order.message.length > 50 || order.message.includes('\n')) && (
