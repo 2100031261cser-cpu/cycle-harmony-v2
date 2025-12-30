@@ -10,7 +10,7 @@ import {
   Users, ShoppingCart, DollarSign, TrendingUp, Search,
   LogOut, Package, CheckCircle, Clock, Truck, XCircle, RefreshCw, Download, MapPin, BarChart3,
   Trash2, Edit, MessageSquare, Eye, MoreHorizontal, Calendar, PieChart, ChevronRight, LineChart,
-  FileText, Filter, MessageCircle, Check, LayoutDashboard, ShoppingBag
+  FileText, Filter, MessageCircle, Check, LayoutDashboard, ShoppingBag, Menu, X
 } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [mobileReportsSidebarOpen, setMobileReportsSidebarOpen] = useState(false);
   const [orderFilter, setOrderFilter] = useState<string>('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Edit/Delete State
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -644,18 +645,47 @@ export default function AdminDashboard() {
   const reportAvgOrderValue = reportTotalOrders > 0 ? Math.round(reportTotalRevenue / reportTotalOrders) : 0;
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans text-gray-900">
+    <div className="flex bg-gray-50 font-sans text-gray-900 min-h-screen relative overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 w-full bg-white border-b border-gray-100 z-30 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-extrabold text-gray-900 tracking-tight">Admin<span className="text-pink-600">Panel</span></h1>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </Button>
+      </div>
+
+      {/* Mobile Backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-100 flex-shrink-0 fixed h-full z-20 overflow-y-auto">
-        <div className="p-6 border-b border-gray-50">
-          <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Admin<span className="text-pink-600">Panel</span></h1>
-          <p className="text-xs font-medium text-green-600 mt-0.5">Cycle Harmony Laddus</p>
+      <aside className={`
+        fixed md:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex-shrink-0 
+        transform transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        h-full overflow-y-auto
+      `}>
+        <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Admin<span className="text-pink-600">Panel</span></h1>
+            <p className="text-xs font-medium text-green-600 mt-0.5">Cycle Harmony Laddus</p>
+          </div>
+          {/* Mobile Close Button (Optional, since we have toggler, but good for UX) */}
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(false)}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         <nav className="p-4 space-y-1">
           <Button
             variant="ghost"
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
             className={`w-full justify-start ${activeTab === 'overview' ? 'bg-pink-50 text-pink-700' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <LayoutDashboard className="w-5 h-5 mr-3" />
@@ -663,7 +693,7 @@ export default function AdminDashboard() {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => setActiveTab('customers')}
+            onClick={() => { setActiveTab('customers'); setMobileMenuOpen(false); }}
             className={`w-full justify-start ${activeTab === 'customers' ? 'bg-pink-50 text-pink-700' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <Users className="w-5 h-5 mr-3" />
@@ -671,7 +701,7 @@ export default function AdminDashboard() {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => setActiveTab('orders')}
+            onClick={() => { setActiveTab('orders'); setMobileMenuOpen(false); }}
             className={`w-full justify-start ${activeTab === 'orders' ? 'bg-pink-50 text-pink-700' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <ShoppingBag className="w-5 h-5 mr-3" />
@@ -679,7 +709,7 @@ export default function AdminDashboard() {
           </Button>
           <Button
             variant="ghost"
-            onClick={() => setActiveTab('reports')}
+            onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
             className={`w-full justify-start ${activeTab === 'reports' ? 'bg-pink-50 text-pink-700' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <BarChart3 className="w-5 h-5 mr-3" />
@@ -700,7 +730,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 p-4 md:p-8 pt-16 md:pt-8 w-full overflow-y-auto h-screen">
         {/* Top Header / Search */}
         <div className="flex justify-between items-center mb-8">
           <div>
