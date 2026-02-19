@@ -11,4 +11,4 @@ services:
       - key: MONGODB_URI
         fromGroup: cycle-harmony-settings
       - key: ALLOWED_ORIGINS
-        value: https://remarkable-tarsier-af2904.netlify.app
+        value: https://majestic-tiramisu-20538b.netlify.app
