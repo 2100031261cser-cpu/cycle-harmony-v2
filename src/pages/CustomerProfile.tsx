@@ -24,9 +24,7 @@ export default function CustomerProfile() {
 
         setLoading(true);
         try {
-            const url = API_BASE_URL
-                ? `${API_BASE_URL}/customer-profile/${phone}`
-                : `http://localhost:5000/api/customer-profile/${phone}`;
+            const url = `${API_BASE_URL}/customer-profile/${phone}`;
 
             const response = await fetch(url);
             const data = await response.json();
