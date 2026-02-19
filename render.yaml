@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cycle-harmony-backend
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromGroup: cycle-harmony-settings
+      - key: ALLOWED_ORIGINS
+        value: https://remarkable-tarsier-af2904.netlify.app
