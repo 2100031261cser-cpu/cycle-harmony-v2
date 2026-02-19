@@ -305,7 +305,8 @@ router.post('/orders', async (req, res) => {
       address,
       paymentMethod,
       message,
-      age // Extract age
+      age, // Extract age
+      email // Extract email
     } = req.body;
 
     // Validate required fields
@@ -326,7 +327,15 @@ router.post('/orders', async (req, res) => {
     }
 
     // Link Customer & Generate IDs
-    let customer = await mongoose.model('Customer').findOne({ phone });
+    let customer;
+    if (email) {
+      customer = await mongoose.model('Customer').findOne({ email });
+    }
+
+    if (!customer && phone) {
+      customer = await mongoose.model('Customer').findOne({ phone });
+    }
+
     let currentCustomerId;
 
     if (customer) {
@@ -369,10 +378,16 @@ router.post('/orders', async (req, res) => {
           landmark: address.landmark || '',
           pincode: address.pincode,
           mapLink: address.mapLink || '',
-          label: address.label || 'Home'
         }],
-        orders: [] // Will push later
+        orders: [], // Will push later
+        email: email || undefined
       });
+      await customer.save();
+    }
+
+    // Update customer email if not set
+    if (customer && !customer.email && email) {
+      customer.email = email;
       await customer.save();
     }
 
@@ -401,6 +416,7 @@ router.post('/orders', async (req, res) => {
       },
       paymentMethod: paymentMethod || 'Cash on Delivery',
       message: message || '',
+      email: email || '',
       orderStatus: 'Pending'
     });
 

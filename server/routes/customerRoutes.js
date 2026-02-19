@@ -36,6 +36,37 @@ router.post('/check-customer', async (req, res) => {
     }
 });
 
+// Check if customer exists by email
+router.post('/check-customer-by-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'Email is required' });
+        }
+
+        const customer = await Customer.findOne({ email });
+
+        if (customer) {
+            return res.status(200).json({
+                success: true,
+                exists: true,
+                data: customer
+            });
+        } else {
+            return res.status(200).json({
+                success: true,
+                exists: false,
+                message: 'Customer not found'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error checking customer by email:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 // Update or Create Customer Profile (can be used for initial data gathering)
 router.post('/customers', async (req, res) => {
     try {
@@ -102,7 +133,7 @@ router.get('/customers', async (req, res) => {
     }
 });
 
-// Get Customer Profile with Orders
+// Get Customer Profile with Orders (by phone)
 router.get('/customer-profile/:phone', async (req, res) => {
     try {
         const { phone } = req.params;
@@ -124,6 +155,32 @@ router.get('/customer-profile/:phone', async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching profile:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Get Customer Profile with Orders (by email)
+router.get('/customer-profile-by-email/:email', async (req, res) => {
+    try {
+        const { email } = req.params;
+
+        const customer = await Customer.findOne({ email });
+
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        // Fetch orders for this email
+        const orders = await Order.find({ email: email }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            customer: customer,
+            orders: orders
+        });
+
+    } catch (error) {
+        console.error('Error fetching profile by email:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

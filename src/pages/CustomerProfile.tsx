@@ -16,15 +16,19 @@ export default function CustomerProfile() {
     const [customer, setCustomer] = useState<any>(null);
     const [orders, setOrders] = useState<any[]>([]);
 
-    const handleLogin = async () => {
-        if (!phone || phone.length < 10) {
-            toast.error("Please enter a valid phone number");
+    const handleLogin = async (val?: string) => {
+        const value = val || phone;
+        if (!value) {
+            toast.error("Please enter a valid detail");
             return;
         }
 
+        const isEmail = value.includes("@");
         setLoading(true);
         try {
-            const url = `${API_BASE_URL}/customer-profile/${phone}`;
+            const url = isEmail
+                ? `${API_BASE_URL}/customer-profile-by-email/${encodeURIComponent(value)}`
+                : `${API_BASE_URL}/customer-profile/${value}`;
 
             const response = await fetch(url);
             const data = await response.json();
@@ -36,7 +40,7 @@ export default function CustomerProfile() {
                 toast.success("Login Successful");
             } else {
                 toast.error("Customer not found", {
-                    description: "No profile found with this number. Please verify or place an order first."
+                    description: isEmail ? "No profile found with this email." : "No profile found with this number."
                 });
             }
         } catch (error) {
@@ -45,6 +49,14 @@ export default function CustomerProfile() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleGoogleLogin = () => {
+        setLoading(true);
+        setTimeout(() => {
+            const simulatedEmail = "user@gmail.com";
+            handleLogin(simulatedEmail);
+        }, 1000);
     };
 
     const getStatusBadge = (status: string) => {
@@ -82,15 +94,30 @@ export default function CustomerProfile() {
                                 </div>
                                 <CardTitle className="text-2xl font-bold text-gray-800">Track Your Orders</CardTitle>
                                 <CardDescription>
-                                    Enter your phone number to view your profile and order history
+                                    Sign in with Google or enter your registered phone number
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="pt-6 space-y-4">
+                                <Button
+                                    onClick={handleGoogleLogin}
+                                    className="w-full h-12 text-md bg-white border-2 border-gray-100 text-gray-700 hover:bg-gray-50 hover:border-pink-200 gap-3 shadow-sm mb-2"
+                                    disabled={loading}
+                                >
+                                    <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="G" />
+                                    {loading ? "Connecting..." : "Continue with Google (Gmail)"}
+                                </Button>
+
+                                <div className="flex items-center gap-2 text-gray-300 text-xs py-2">
+                                    <div className="flex-1 h-px bg-gray-100"></div>
+                                    <span>OR</span>
+                                    <div className="flex-1 h-px bg-gray-100"></div>
+                                </div>
+
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">Phone Number</label>
                                     <Input
                                         type="tel"
-                                        placeholder="Enter your registered mobile number"
+                                        placeholder="Registered mobile number"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         className="h-12 text-lg"
@@ -98,10 +125,10 @@ export default function CustomerProfile() {
                                 </div>
                                 <Button
                                     className="w-full h-12 text-lg bg-pink-500 hover:bg-pink-600"
-                                    onClick={handleLogin}
+                                    onClick={() => handleLogin()}
                                     disabled={loading}
                                 >
-                                    {loading ? "Searching..." : "View Profile"}
+                                    {loading ? "Searching..." : "View Order History"}
                                 </Button>
                             </CardContent>
                         </Card>
@@ -118,12 +145,14 @@ export default function CustomerProfile() {
                             </CardHeader>
                             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500 mb-1">Phone Number</p>
-                                    <p className="font-semibold text-lg">{customer?.phone}</p>
+                                    <p className="text-sm text-gray-500 mb-1">Email / Phone</p>
+                                    <p className="font-semibold text-lg truncate">{customer?.email || customer?.phone}</p>
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500 mb-1">Age</p>
-                                    <p className="font-semibold text-lg">{customer?.age || "N/A"} years</p>
+                                    <p className="text-sm text-gray-500 mb-1">Member Since</p>
+                                    <p className="font-semibold text-lg">
+                                        {new Date(customer?.createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                                    </p>
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-lg">
                                     <p className="text-sm text-gray-500 mb-1">Total Orders</p>
@@ -199,6 +228,6 @@ export default function CustomerProfile() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

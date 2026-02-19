@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ interface CycleResult {
 }
 
 export const CycleCompanion = () => {
+  const navigate = useNavigate();
   const [lastPeriodDate, setLastPeriodDate] = useState("");
   const [averageCycle, setAverageCycle] = useState("");
   const [name, setName] = useState("");
@@ -142,9 +143,18 @@ export const CycleCompanion = () => {
       return;
     }
 
-    setCheckoutStep('phone');
-    setPhone("");
-    setAddressOpen(true);
+    const orderData = {
+      fullName: name,
+      periodsStarted: lastPeriodDate,
+      cycleLength: parseInt(averageCycle),
+      phase: result.phase,
+      totalQuantity: result.quantity,
+      totalWeight: result.weight,
+      totalPrice: result.price_total,
+      message: result.message
+    };
+
+    navigate("/checkout", { state: { orderData } });
   };
 
   const handleConfirmAddress = () => {
@@ -342,74 +352,6 @@ export const CycleCompanion = () => {
           </Card>
         </div>
       </div>
-
-      <Dialog open={addressOpen} onOpenChange={setAddressOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {checkoutStep === 'phone' && "Enter Phone Number"}
-              {checkoutStep === 'details' && "A few more details"}
-              {checkoutStep === 'address' && "Delivery Address"}
-            </DialogTitle>
-          </DialogHeader>
-
-          {checkoutStep === 'phone' && (
-            <div className="space-y-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="checkPhone">Phone Number</Label>
-                <div className="flex gap-2">
-                  <Input id="checkPhone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g 9876543210" />
-                  <Button onClick={handlePhoneCheck} disabled={checkingPhone}>{checkingPhone ? "Checking..." : "Next"}</Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {checkoutStep === 'details' && (
-            <div className="space-y-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="checkoutName">Full Name</Label>
-                <Input id="checkoutName" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="checkoutAge">Age</Label>
-                <Input id="checkoutAge" type="number" value={age} onChange={(e) => setAge(e.target.value)} />
-              </div>
-              <DialogFooter className="mt-4"><Button onClick={() => setCheckoutStep('address')}>Next</Button></DialogFooter>
-            </div>
-          )}
-
-          {checkoutStep === 'address' && (
-            <div className="space-y-4">
-              <div className="bg-yellow-50 text-yellow-800 text-xs p-3 rounded-md border border-yellow-100">
-                Delivery currently available within Hyderabad only.
-              </div>
-              <div className="grid gap-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="house">House / Flat No.</Label>
-                  <Input id="house" value={house} onChange={(e) => setHouse(e.target.value)} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="area">Area</Label>
-                  <Input id="area" value={area} onChange={(e) => setArea(e.target.value)} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="landmark">Landmark (Optional)</Label>
-                  <Input id="landmark" value={landmark} onChange={(e) => setLandmark(e.target.value)} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="pincode">Pincode</Label>
-                  <Input id="pincode" type="number" value={pincode} onChange={(e) => setPincode(e.target.value)} />
-                </div>
-              </div>
-              <DialogFooter className="mt-2">
-                <Button variant="outline" onClick={() => setAddressOpen(false)}>Cancel</Button>
-                <Button onClick={handleConfirmAddress} className="bg-green-600 hover:bg-green-700">Confirm & WhatsApp</Button>
-              </DialogFooter>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </section>
   );
 };
