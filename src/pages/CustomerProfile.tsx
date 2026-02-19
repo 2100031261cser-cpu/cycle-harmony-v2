@@ -7,7 +7,7 @@ import { Search, Package, Calendar, Clock, CheckCircle, Truck, XCircle } from "l
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = '/api';
 
 export default function CustomerProfile() {
     const [phone, setPhone] = useState("");

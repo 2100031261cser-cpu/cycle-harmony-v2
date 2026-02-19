@@ -20,7 +20,7 @@ import { Customers } from "@/components/admin/Customers";
 import { Orders } from "@/components/admin/Orders";
 import { Reports } from "@/components/admin/Reports";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = '/api';
 
 const DELIVERY_BOYS = ["Ram", "Shyam", "Krishna", "Raju", "Suresh", "Mahesh"];
 
