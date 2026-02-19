@@ -71,7 +71,7 @@ export default function CustomerProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white">
+        <div className="min-h-screen">
             <Navbar />
 
             <div className="container mx-auto px-4 py-8 pt-24">

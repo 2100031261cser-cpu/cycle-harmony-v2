@@ -99,6 +99,16 @@ const orderSchema = new mongoose.Schema({
     default: 'Pending'
   },
 
+  // Delivery Assignment
+  deliveryBoy: {
+    type: String,
+    trim: true
+  },
+  deliveryBoyPhone: {
+    type: String,
+    trim: true
+  },
+
   // Additional Information
   message: {
     type: String
@@ -120,4 +130,3 @@ orderSchema.index({ orderStatus: 1 });
 const Order = mongoose.model('Order', orderSchema);
 
 export default Order;
-

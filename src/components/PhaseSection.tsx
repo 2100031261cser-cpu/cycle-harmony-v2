@@ -25,7 +25,7 @@ export function PhaseSection({
 
   return (
     <section className={`py-20 ${backgroundColor}`}>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 max-w-7xl">
         <div className={`grid lg:grid-cols-2 gap-12 items-center ${!isPhase1 ? 'lg:grid-flow-col-reverse' : ''}`}>
           {/* Image */}
           <div className={`flex justify-center ${!isPhase1 ? 'lg:order-2' : ''}`}>

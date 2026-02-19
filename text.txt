@@ -1,0 +1,836 @@
+================================================================================
+COMPLETE PROMPT FOR CREATING A WOMEN'S WELLNESS E-COMMERCE WEBSITE
+================================================================================
+
+PROJECT OVERVIEW:
+Create a modern, full-stack e-commerce website for "NHC Service" - a women's health and wellness brand selling seed cycling laddus (traditional Indian sweets) for hormone balance. The website should be premium, visually stunning, and fully functional with admin and delivery management systems.
+
+================================================================================
+FRONTEND REQUIREMENTS
+================================================================================
+
+TECH STACK:
+- React 18+ with TypeScript
+- Vite as build tool
+- React Router for navigation
+- TailwindCSS for styling
+- Lucide React for icons
+- Shadcn/ui components
+- Framer Motion or CSS animations for smooth transitions
+
+DESIGN AESTHETIC:
+- **Typography:**
+  - Headings: 'Playfair Display' or 'Outfit' (Elegant, Modern Serif/Sans-Serif)
+  - Body: 'Inter' or 'Lato' (Clean, Readable)
+- **Visual Style:**
+  - **Glassmorphism:** Heavy use of `backdrop-blur-md` and `bg-white/10` or `bg-white/70` for cards and overlays.
+  - **Soft Shadows:** `shadow-lg`, `shadow-xl`, and colored shadows (e.g., `shadow-green-100`) for depth.
+  - **Rounded Corners:** `rounded-2xl` or `rounded-3xl` for a soft, friendly feel.
+  - **Gradients:** Subtle, pastel gradients for backgrounds and text overlays (e.g., `bg-gradient-to-r from-green-50 to-pink-50`).
+  - **Micro-Interactions:** 
+    - Buttons: Scale up slightly on hover (`hover:scale-105`), add a subtle shine effect.
+    - Cards: Lift up on hover (`hover:-translate-y-1`), add a border glow.
+    - Images: subtle zoom on hover (`hover:scale-110` inside `overflow-hidden`).
+- **Layout:**
+  - **Generous Whitespace:** Use ample padding (`p-6`, `p-8`) to create a breathable, premium layout.
+  - **Asymmetrical Grids:** Use masonry or staggered layouts for visual interest in product listings.
+  - **Container Width:** Max-width of `max-w-7xl` centered for large screens.
+- **Color Palette (Refined):**
+  * Primary Green: #4CAF50 (wellness-green) - Trust, Nature
+  * Soft Pink: #FFB6C1 (wellness-pink) - Care, Hormonal Balance
+  * Cream: #FFF8DC (wellness-cream) - Warmth, Comfort
+  * Deep Green: #2E7D32 (wellness-green-dark) - Contrast, Action
+  * Text Color: #374151 (gray-700) - Readable, Soft Black
+- **Animations:**
+  - Entrance: `fade-in-up` with staggered delays for lists.
+  - Scroll: Parallax effects on background shapes.
+  - Floating Elements: Gentle bobbing animation (`animate-bounce-slow`) for decorative icons.
+
+PAGES TO CREATE:
+
+1. HOME PAGE (/)
+   - **Hero Section:** Full-screen height (`min-h-screen`), split layout (Text Left, Image Right) or centered content with background video/image. Use a floating 3D product render if possible.
+   - **Sticky Navbar:** Starts transparent, becomes solid white/glassmorphic on scroll.
+   - **Benefits Section:** Cards with icon headers, using a grid layout (3-4 columns). Each card has a subtle gradient border.
+   - **Why Choose:** Comparison table with checkmarks vs. cross marks, styled as a card floating over a gradient background.
+   - **Interactive Cycle Checker:** A visually distinct section, perhaps a multi-step form wizard style with progress bar.
+   - **Testimonials:** Carousel slider with user avatars and star ratings.
+   - **Footer:** Dark or deep gradient background for contrast. with gradient
+   - Footer with 4 columns
+
+2. SHOP PAGE (/shop)
+   - Product cards with glassmorphic design
+   - Phase I and Phase II laddus
+   - Pricing: ₹399 per pack
+   - Add to cart functionality
+   - Embedded cycle phase checker
+   - Product details and ingredients
+
+3. ADMIN DASHBOARD (/admin/dashboard)
+   - Login page (/admin/login)
+   - Order management (view, update status, assign delivery)
+   - Customer management
+   - Delivery boy assignment
+   - Order status tracking
+   - Analytics cards
+
+4. DELIVERY DASHBOARD (/delivery/dashboard)
+   - View assigned orders
+   - Update delivery status
+   - Customer contact information
+
+5. CUSTOMER PROFILE (/profile)
+   - Order history
+   - Personal information
+   - Order tracking
+
+6. POLICY PAGES
+   - Privacy Policy (/privacy-policy)
+   - Terms & Conditions (/terms-conditions)
+   - Shipping Policy (/shipping-policy)
+   - Refund Policy (/refund-policy)
+
+KEY COMPONENTS:
+
+1. Navbar
+   - Layout: Logo left, Links center (hidden on mobile), Actions right (Cart, Profile, Mobile Menu).
+   - Style: Glassmorphic (`backdrop-blur-md bg-white/70`), sticky positioning with `z-50`.
+   - Interactions: Links have a sliding underline effect on hover. Mobile menu opens with a smooth slide-in animation from the right.
+   - Logo: Use a high-quality SVG or PNG.
+
+2. Footer
+   - Layout: 4-column grid on desktop, single column accordion on mobile.
+   - Content:
+     * Brand: Logo, tagline, social icons (circle background, hover color change).
+     * Quick Links: Arrow icon appears on hover (`group-hover:translate-x-1`).
+     * Contact: Icons for phone/email/location.
+     * Newsletter: Input field with floating label and "Subscribe" button.
+   - Style: Darker background or deep gradient for visual weight at the bottom.
+
+3. Cycle Phase Checker
+   - Visual: Card-based layout with a progress stepper.
+   - Input: Custom styled date picker (not default browser input).
+   - Result: Animated reveal of the phase, with a gauge or circular progress bar showing days remaining.
+   - CTA: "Get Phase I Laddus" button pulses gently if matching.
+
+4. Product Cards
+   - Container: Glassmorphic card `bg-white/60`, border `border-white/40`, shadow `shadow-lg`.
+   - Image: Large, high-quality image with `group-hover:scale-105` transition.
+   - Content: Title (serif font), Price (bold, distinct color), Rating stars.
+   - Actions: "Add to Cart" button slides up from bottom on hover or is always visible with specific styling.
+   - Badges: "Best Seller", "Phase I" badges in corners.
+
+5. Order Management (Admin)
+   - Table: Clean rows with alternating colors or hover effects.
+   - Status Badges: Pill-shaped, color-coded (Green=Delivered, Yellow=Pending, Blue=Shipped).
+   - Filters: Dropdowns for status/date with custom styling.
+   - Delivery boy dropdown
+   - Status update functionality
+
+ANIMATIONS & INTERACTIONS:
+- Staggered entrance animations with delays
+- Hover scale effects on cards
+- Smooth transitions (duration-300, duration-500)
+- Pulsating background decorations
+- Fade-in effects on scroll
+- Button hover effects
+
+GRADIENT BACKGROUNDS:
+- Hero: from-wellness-cream via-wellness-green-light/30 to-wellness-pink/30
+- Benefits: from-pink-50 via-purple-50 to-green-50
+- Why Choose: from-green-50 via-yellow-50 to-pink-50
+- Footer: from-wellness-cream via-pink-50 to-green-50
+- Navbar: from-wellness-cream/95 via-wellness-green-light/20 to-wellness-pink/20
+
+================================================================================
+UI POLISH & MICRO-INTERACTIONS
+================================================================================
+
+1. Loading States
+   - Use Skeleton loaders (`animate-pulse`) that match the shape of the content (circle for avatars, blocks for text).
+   - Show a global progress bar or spinner for route transitions.
+
+2. Empty States
+   - Custom illustrations for "Empty Cart", "No Orders", etc.
+   - Friendly text and a clear CTA button to guide the user (e.g., "Start Shopping").
+
+3. Feedback Toasts
+   - Use `sonner` or `react-hot-toast` for success/error messages.
+   - Position: Top-center or Bottom-right.
+   - Style: Glassmorphic background with status icons.
+
+4. Scroll Behavior
+   - Implement smooth scrolling for anchor links (`scroll-behavior: smooth`).
+   - Add a "Back to Top" button that appears after scrolling down 300px.
+
+5. Form Validation
+   - Real-time validation with red border and helper text.
+   - Shake animation on submit if invalid.
+
+================================================================================
+BACKEND REQUIREMENTS
+================================================================================
+
+TECH STACK:
+- Node.js with Express.js
+- MongoDB with Mongoose
+- JWT for authentication
+- Bcrypt for password hashing
+- CORS enabled
+- Express session management
+
+DATABASE MODELS:
+
+1. Order Model
+   - customerName: String
+   - phoneNumber: String
+   - address: String
+   - items: Array of {productName, quantity, price}
+   - totalAmount: Number
+   - status: Enum (pending, processing, shipped, delivered)
+   - deliveryBoy: Reference to User
+   - createdAt: Date
+   - updatedAt: Date
+
+2. User Model
+   - username: String (unique)
+   - password: String (hashed)
+   - role: Enum (admin, delivery)
+   - phoneNumber: String
+   - createdAt: Date
+
+3. Product Model
+   - name: String
+   - description: String
+   - price: Number
+   - phase: String (Phase I or Phase II)
+   - ingredients: Array of Strings
+   - image: String (URL)
+   - inStock: Boolean
+
+API ENDPOINTS:
+
+AUTHENTICATION:
+- POST /api/auth/login - Admin/Delivery login
+- POST /api/auth/logout - Logout
+- GET /api/auth/verify - Verify JWT token
+
+ORDERS:
+- GET /api/orders - Get all orders (admin only)
+- POST /api/orders - Create new order
+- GET /api/orders/:id - Get single order
+- PUT /api/orders/:id - Update order status
+- PUT /api/orders/:id/assign - Assign delivery boy
+- DELETE /api/orders/:id - Delete order (admin only)
+
+DELIVERY:
+- GET /api/delivery/orders - Get assigned orders (delivery boy)
+- PUT /api/delivery/orders/:id/status - Update delivery status
+
+USERS:
+- GET /api/users/delivery-boys - Get all delivery boys (admin only)
+- POST /api/users/delivery-boy - Create delivery boy account (admin only)
+
+PRODUCTS:
+- GET /api/products - Get all products
+- POST /api/products - Create product (admin only)
+- PUT /api/products/:id - Update product (admin only)
+
+MIDDLEWARE:
+- Authentication middleware (verify JWT)
+- Role-based authorization (admin, delivery)
+- Error handling middleware
+- Request logging
+
+SECURITY:
+- Password hashing with bcrypt (10 rounds)
+- JWT tokens with expiration
+- CORS configuration
+- Input validation
+- SQL injection prevention
+- XSS protection
+
+================================================================================
+PAYMENT INTEGRATION
+================================================================================
+
+PAYMENT GATEWAY: Razorpay
+
+IMPLEMENTATION:
+- Install razorpay npm package
+- Create Razorpay instance with key_id and key_secret
+- Generate order on backend
+- Process payment on frontend
+- Verify payment signature on backend
+- Update order status after successful payment
+
+ENDPOINTS:
+- POST /api/payment/create-order - Create Razorpay order
+- POST /api/payment/verify - Verify payment signature
+
+================================================================================
+DEPLOYMENT CONFIGURATION
+================================================================================
+
+FRONTEND:
+- Build command: npm run build
+- Output directory: dist
+- Environment variables:
+  * VITE_API_URL=your_backend_url
+  * VITE_RAZORPAY_KEY=your_razorpay_key
+
+BACKEND:
+- Start command: npm start
+- Environment variables:
+  * PORT=5000
+  * MONGODB_URI=your_mongodb_connection_string
+  * JWT_SECRET=your_jwt_secret
+  * RAZORPAY_KEY_ID=your_razorpay_key_id
+  * RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+================================================================================
+ADDITIONAL FEATURES
+================================================================================
+
+1. WhatsApp Integration
+   - Floating WhatsApp button
+   - Direct order placement via WhatsApp
+   - Order updates via WhatsApp
+
+2. Email Notifications
+   - Order confirmation emails
+   - Status update emails
+   - Delivery notifications
+
+3. Analytics Dashboard
+   - Total orders count
+   - Revenue tracking
+   - Order status distribution
+   - Customer analytics
+
+4. Search & Filter
+   - Search orders by customer name, phone
+   - Filter by status, date range
+   - Sort by date, amount
+
+5. Responsive Design
+   - Mobile-optimized layouts
+   - Touch-friendly interactions
+   - Adaptive navigation
+
+================================================================================
+CONTENT DETAILS
+================================================================================
+
+PRODUCT INFORMATION:
+
+Phase I Laddus (Follicular Phase - Days 1-14):
+- Ingredients: Flax seeds, Pumpkin seeds, Sesame seeds, Jaggery, Ghee
+- Benefits: Estrogen balance, Egg quality, Energy boost
+- Price: ₹399
+
+Phase II Laddus (Luteal Phase - Days 15-28):
+- Ingredients: Sunflower seeds, Sesame seeds, Jaggery, Ghee
+- Benefits: Progesterone support, PMS relief, Mood balance
+- Price: ₹399
+
+SHIPPING POLICY:
+- Delivery area: Hyderabad only
+- Processing time: 1-2 business days
+- Delivery time: 2-5 business days
+- Free shipping on orders above ₹999
+
+CONTACT INFORMATION:
+- Email: support@nhcservice.in
+- Phone: +91 98765 43210
+- Location: Hyderabad, India
+
+================================================================================
+STEP-BY-STEP IMPLEMENTATION GUIDE
+================================================================================
+
+STEP 1: PROJECT SETUP
+1. Create React + TypeScript project with Vite
+2. Install dependencies: react-router-dom, tailwindcss, lucide-react, shadcn/ui
+3. Configure Tailwind with custom colors
+4. Set up folder structure: components, pages, lib, types
+
+STEP 2: BACKEND SETUP
+1. Initialize Node.js project
+2. Install: express, mongoose, bcrypt, jsonwebtoken, cors, dotenv
+3. Create database models
+4. Set up Express server with middleware
+5. Implement authentication routes
+6. Create API endpoints
+
+STEP 3: FRONTEND PAGES
+1. Create Index (Home) page with all sections
+2. Build ShopNow page with product cards
+3. Implement Admin Dashboard with order management
+4. Create Delivery Dashboard
+5. Build policy pages
+
+STEP 4: COMPONENTS
+1. Navbar with mobile menu
+2. Footer with 4 columns
+3. Cycle Phase Checker
+4. Product cards
+5. Order management table
+
+STEP 5: STYLING
+1. Apply gradient backgrounds
+2. Add glassmorphic effects
+3. Implement animations
+4. Ensure responsive design
+
+STEP 6: INTEGRATION
+1. Connect frontend to backend API
+2. Implement authentication flow
+3. Add payment gateway
+4. Test all features
+
+STEP 7: DEPLOYMENT
+1. Build frontend
+2. Deploy backend to hosting service
+3. Configure environment variables
+4. Test production deployment
+
+================================================================================
+EXAMPLE CODE SNIPPETS
+================================================================================
+
+TAILWIND CONFIG (tailwind.config.js):
+```javascript
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        'wellness-green': '#4CAF50',
+        'wellness-pink': '#FFB6C1',
+        'wellness-cream': '#FFF8DC',
+        'wellness-green-light': '#E8F5E9',
+        'wellness-yellow': '#FFD54F',
+      },
+      fontFamily: {
+        heading: ['Poppins', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}
+```
+
+BACKEND SERVER (server.js):
+```javascript
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error(err));
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/delivery', require('./routes/delivery'));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+```
+
+GLASSMORPHIC CARD STYLE:
+```jsx
+<div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl p-8 border border-white/50">
+  {/* Content */}
+</div>
+```
+
+GRADIENT BACKGROUND:
+```jsx
+<section className="py-20 bg-gradient-to-br from-pink-50 via-purple-50 to-green-50 relative overflow-hidden">
+  {/* Content */}
+</section>
+```
+
+ENTRANCE ANIMATION:
+```jsx
+<div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+  {/* Content */}
+</div>
+```
+
+================================================================================
+CYCLE PHASE CHECKER - BACKEND LOGIC
+================================================================================
+
+OVERVIEW:
+The Cycle Phase Checker calculates which phase of the menstrual cycle a user is currently in based on their last period date. This helps recommend the appropriate seed cycling laddus (Phase I or Phase II).
+
+MENSTRUAL CYCLE PHASES:
+- Phase I (Follicular Phase): Days 1-14 of the cycle
+- Phase II (Luteal Phase): Days 15-28 of the cycle
+- Average cycle length: 28 days (customizable)
+
+DATABASE MODEL:
+
+CycleData Model (Optional - for storing user cycle history):
+```javascript
+const mongoose = require('mongoose');
+
+const cycleDataSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: false  // Can be anonymous
+  },
+  lastPeriodDate: {
+    type: Date,
+    required: true
+  },
+  cycleLength: {
+    type: Number,
+    default: 28,
+    min: 21,
+    max: 35
+  },
+  calculatedPhase: {
+    type: String,
+    enum: ['Phase I', 'Phase II'],
+    required: true
+  },
+  currentDay: {
+    type: Number,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('CycleData', cycleDataSchema);
+```
+
+API ENDPOINTS:
+
+1. POST /api/cycle/calculate - Calculate current cycle phase
+2. GET /api/cycle/history/:userId - Get user's cycle history (optional)
+3. POST /api/cycle/save - Save cycle data for tracking (optional)
+
+BACKEND IMPLEMENTATION:
+
+File: routes/cycle.js
+```javascript
+const express = require('express');
+const router = express.Router();
+
+// Utility function to calculate cycle phase
+function calculateCyclePhase(lastPeriodDate, cycleLength = 28) {
+  // Convert lastPeriodDate to Date object
+  const lastPeriod = new Date(lastPeriodDate);
+  const today = new Date();
+  
+  // Reset time to midnight for accurate day calculation
+  lastPeriod.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+  
+  // Calculate days since last period
+  const timeDiff = today.getTime() - lastPeriod.getTime();
+  const daysSinceLastPeriod = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  
+  // Calculate current day in cycle (1-based)
+  const currentDay = (daysSinceLastPeriod % cycleLength) + 1;
+  
+  // Determine phase
+  let phase;
+  let phaseName;
+  let phaseDescription;
+  let recommendedProduct;
+  let phaseColor;
+  
+  if (currentDay >= 1 && currentDay <= 14) {
+    phase = 'Phase I';
+    phaseName = 'Follicular Phase';
+    phaseDescription = 'This is the time when your body prepares for ovulation. Estrogen levels rise during this phase.';
+    recommendedProduct = 'Phase I Laddus';
+    phaseColor = '#4CAF50'; // Green
+  } else {
+    phase = 'Phase II';
+    phaseName = 'Luteal Phase';
+    phaseDescription = 'This is the time after ovulation when your body prepares for menstruation. Progesterone levels rise during this phase.';
+    recommendedProduct = 'Phase II Laddus';
+    phaseColor = '#FFB6C1'; // Pink
+  }
+  
+  // Calculate days until next period
+  const daysUntilNextPeriod = cycleLength - currentDay;
+  
+  // Calculate next period date
+  const nextPeriodDate = new Date(lastPeriod);
+  nextPeriodDate.setDate(lastPeriod.getDate() + cycleLength);
+  
+  return {
+    currentDay,
+    phase,
+    phaseName,
+    phaseDescription,
+    recommendedProduct,
+    phaseColor,
+    cycleLength,
+    daysUntilNextPeriod,
+    nextPeriodDate: nextPeriodDate.toISOString().split('T')[0],
+    lastPeriodDate: lastPeriod.toISOString().split('T')[0]
+  };
+}
+
+// POST /api/cycle/calculate
+// Calculate current cycle phase
+router.post('/calculate', async (req, res) => {
+  try {
+    const { lastPeriodDate, cycleLength } = req.body;
+    
+    // Validation
+    if (!lastPeriodDate) {
+      return res.status(400).json({ 
+        error: 'Last period date is required' 
+      });
+    }
+    
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(lastPeriodDate)) {
+      return res.status(400).json({ 
+        error: 'Invalid date format. Use YYYY-MM-DD' 
+      });
+    }
+    
+    // Validate cycle length
+    const validCycleLength = cycleLength || 28;
+    if (validCycleLength < 21 || validCycleLength > 35) {
+      return res.status(400).json({ 
+        error: 'Cycle length must be between 21 and 35 days' 
+      });
+    }
+    
+    // Calculate phase
+    const result = calculateCyclePhase(lastPeriodDate, validCycleLength);
+    
+    res.json({
+      success: true,
+      data: result
+    });
+    
+  } catch (error) {
+    console.error('Error calculating cycle phase:', error);
+    res.status(500).json({ 
+      error: 'Failed to calculate cycle phase',
+      message: error.message 
+    });
+  }
+});
+
+// POST /api/cycle/save (Optional)
+// Save cycle data for tracking
+router.post('/save', async (req, res) => {
+  try {
+    const { userId, lastPeriodDate, cycleLength } = req.body;
+    
+    if (!lastPeriodDate) {
+      return res.status(400).json({ 
+        error: 'Last period date is required' 
+      });
+    }
+    
+    const result = calculateCyclePhase(lastPeriodDate, cycleLength || 28);
+    
+    // Save to database (if CycleData model is implemented)
+    const cycleData = new CycleData({
+      userId: userId || 'anonymous',
+      lastPeriodDate: new Date(lastPeriodDate),
+      cycleLength: cycleLength || 28,
+      calculatedPhase: result.phase,
+      currentDay: result.currentDay
+    });
+    
+    await cycleData.save();
+    
+    res.json({
+      success: true,
+      message: 'Cycle data saved successfully',
+      data: result
+    });
+    
+  } catch (error) {
+    console.error('Error saving cycle data:', error);
+    res.status(500).json({ 
+      error: 'Failed to save cycle data',
+      message: error.message 
+    });
+  }
+});
+
+module.exports = router;
+```
+
+FRONTEND INTEGRATION:
+
+Example API call from React component:
+```javascript
+const calculatePhase = async (lastPeriodDate) => {
+  try {
+    const response = await fetch('http://localhost:5000/api/cycle/calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastPeriodDate: lastPeriodDate, // Format: "YYYY-MM-DD"
+        cycleLength: 28
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('Current Phase:', data.data.phase);
+      console.log('Recommended Product:', data.data.recommendedProduct);
+      console.log('Current Day:', data.data.currentDay);
+      console.log('Days Until Next Period:', data.data.daysUntilNextPeriod);
+      return data.data;
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+```
+
+RESPONSE FORMAT:
+
+Success Response:
+```json
+{
+  "success": true,
+  "data": {
+    "currentDay": 10,
+    "phase": "Phase I",
+    "phaseName": "Follicular Phase",
+    "phaseDescription": "This is the time when your body prepares for ovulation. Estrogen levels rise during this phase.",
+    "recommendedProduct": "Phase I Laddus",
+    "phaseColor": "#4CAF50",
+    "cycleLength": 28,
+    "daysUntilNextPeriod": 18,
+    "nextPeriodDate": "2026-03-15",
+    "lastPeriodDate": "2026-02-15"
+  }
+}
+```
+
+Error Response:
+```json
+{
+  "error": "Last period date is required"
+}
+```
+
+ALGORITHM EXPLANATION:
+
+1. Input: Last period date (YYYY-MM-DD format)
+2. Calculate days since last period: (Today - Last Period Date)
+3. Calculate current day in cycle: (Days Since Last Period % Cycle Length) + 1
+4. Determine phase:
+   - If current day is 1-14: Phase I (Follicular)
+   - If current day is 15-28: Phase II (Luteal)
+5. Calculate next period date: Last Period Date + Cycle Length
+6. Calculate days until next period: Cycle Length - Current Day
+7. Return all calculated data with recommendations
+
+EDGE CASES HANDLED:
+
+1. Future dates: If last period date is in the future, calculation still works
+2. Very old dates: Cycles wrap around using modulo operation
+3. Invalid dates: Validation checks for proper date format
+4. Custom cycle lengths: Supports 21-35 day cycles
+5. Timezone issues: Dates are normalized to midnight for consistency
+
+ADDITIONAL FEATURES TO IMPLEMENT:
+
+1. Cycle History Tracking
+   - Store multiple cycle entries per user
+   - Calculate average cycle length
+   - Predict future periods based on history
+
+2. Notifications
+   - Remind users when to switch products
+   - Alert when period is approaching
+   - Send WhatsApp/Email reminders
+
+3. Analytics
+   - Track cycle regularity
+   - Identify patterns
+   - Generate health insights
+
+4. Integration with Orders
+   - Auto-recommend products based on current phase
+   - Subscription service for automatic deliveries
+   - Phase-based product bundles
+
+SERVER INTEGRATION:
+
+Add to main server.js:
+```javascript
+const cycleRoutes = require('./routes/cycle');
+app.use('/api/cycle', cycleRoutes);
+```
+
+TESTING:
+
+Example test cases:
+```javascript
+// Test Case 1: Day 10 of cycle (Phase I)
+POST /api/cycle/calculate
+{
+  "lastPeriodDate": "2026-02-05",
+  "cycleLength": 28
+}
+// Expected: Phase I, Day 10
+
+// Test Case 2: Day 20 of cycle (Phase II)
+POST /api/cycle/calculate
+{
+  "lastPeriodDate": "2026-01-26",
+  "cycleLength": 28
+}
+// Expected: Phase II, Day 20
+
+// Test Case 3: Custom cycle length
+POST /api/cycle/calculate
+{
+  "lastPeriodDate": "2026-02-01",
+  "cycleLength": 30
+}
+// Expected: Calculated based on 30-day cycle
+```
+
+================================================================================
+FINAL NOTES
+================================================================================
+
+- Ensure all images are optimized for web
+- Use lazy loading for images
+- Implement error handling throughout
+- Add loading states for async operations
+- Test on multiple devices and browsers
+- Follow accessibility best practices
+- Optimize for SEO
+- Implement analytics tracking
+- Add proper meta tags
+- Create sitemap
+
+This prompt provides a complete blueprint for recreating the NHC Service website with all frontend and backend functionality, design specifications, and implementation details.

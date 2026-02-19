@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,8 @@ interface Order {
     orderStatus: string;
     customerId?: string;
     createdAt: string;
+    deliveryBoy?: string;
+    paymentMethod?: string;
 }
 
 export default function DeliveryDashboard() {
@@ -35,6 +38,7 @@ export default function DeliveryDashboard() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const deliveryBoyName = localStorage.getItem("adminUsername");
 
     useEffect(() => {
         checkAuth();
@@ -59,25 +63,44 @@ export default function DeliveryDashboard() {
     const loadOrders = async (showLoading = true) => {
         try {
             if (showLoading) setLoading(true);
-            const token = localStorage.getItem("deliveryToken") || localStorage.getItem("adminToken"); // Fallback if tested with admin token
-            // In a real app, we'd have a specific endpoint or backend filtering.
-            // For now, we fetch all and filter client-side or assume backend returns relevant ones.
-            // Since backend doesn't have specific "my-orders" route yet, we fetch all and filter.
-            // OPTIMIZATION: Fetch only Shipped orders to reduce load time
-            const res = await fetch(`${API_BASE_URL}/orders?status=Shipped`, {
+            const token = localStorage.getItem("deliveryToken") || localStorage.getItem("adminToken");
+            const name = localStorage.getItem("adminUsername");
+
+            if (!name) {
+                toast.error("User not identified");
+                return;
+            }
+
+            // Fetch orders assigned to this delivery boy
+            // Removed status=Shipped to show ALL assigned orders
+            const res = await fetch(`${API_BASE_URL}/orders?deliveryBoy=${name}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (res.ok) {
                 const responseData = await res.json();
                 if (responseData.success && responseData.data) {
-                    const shippedOrders = responseData.data;
-                    // Sort: Shipped first, then by date
-                    shippedOrders.sort((a: Order, b: Order) => {
-                        if (a.orderStatus === 'Shipped' && b.orderStatus !== 'Shipped') return -1;
-                        if (a.orderStatus !== 'Shipped' && b.orderStatus === 'Shipped') return 1;
+                    const assignedOrders = responseData.data;
+
+                    // Sort: specific status priority, then date
+                    // Priority: Shipped > Processing > Confirmed > Pending > Delivered
+                    const statusPriority: Record<string, number> = {
+                        'Shipped': 1,
+                        'Processing': 2,
+                        'Confirmed': 3,
+                        'Pending': 4,
+                        'Delivered': 5,
+                        'Cancelled': 6
+                    };
+
+                    assignedOrders.sort((a: Order, b: Order) => {
+                        const pA = statusPriority[a.orderStatus] || 99;
+                        const pB = statusPriority[b.orderStatus] || 99;
+                        if (pA !== pB) return pA - pB;
                         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                     });
-                    setOrders(shippedOrders);
+
+                    setOrders(assignedOrders);
                 }
             }
         } catch (error) {
@@ -118,8 +141,10 @@ export default function DeliveryDashboard() {
         navigate("/admin/login");
     };
 
+    const activeOrdersCount = orders.filter(o => ['Shipped', 'Processing', 'Confirmed', 'Pending'].includes(o.orderStatus)).length;
+
     return (
-        <div className="min-h-screen bg-gray-50 pb-8">
+        <div className="min-h-screen pb-8">
             {/* Header */}
             <div className="bg-white border-b sticky top-0 z-10">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -127,7 +152,7 @@ export default function DeliveryDashboard() {
                         <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
                             Delivery Dashboard
                         </h1>
-                        <p className="text-xs text-gray-500">Welcome, Ram</p>
+                        <p className="text-xs text-gray-500">Welcome, {deliveryBoyName || 'Partner'}</p>
                     </div>
                     <Button variant="outline" size="sm" onClick={handleLogout} className="flex gap-2">
                         <LogOut className="w-4 h-4" />
@@ -141,7 +166,7 @@ export default function DeliveryDashboard() {
                     <div className="flex items-center gap-2">
                         <Truck className="w-6 h-6 text-blue-600" />
                         <h2 className="text-lg font-semibold text-gray-800">Assigned Orders</h2>
-                        <Badge variant="secondary" className="ml-2">{orders.filter(o => o.orderStatus === 'Shipped').length} Pending</Badge>
+                        <Badge variant="secondary" className="ml-2">{activeOrdersCount} Active</Badge>
                     </div>
                     <Button variant="outline" size="sm" onClick={() => loadOrders(true)} title="Refresh Orders">
                         <RefreshCw className="w-4 h-4 mr-2" />
@@ -156,19 +181,19 @@ export default function DeliveryDashboard() {
                 ) : orders.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg border border-dashed">
                         <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">No orders assigned for delivery yet.</p>
+                        <p className="text-gray-500">No orders assigned to {deliveryBoyName}.</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {orders.map((order) => (
-                            <Card key={order._id} className={`overflow-hidden transition-all ${order.orderStatus === 'Shipped' ? 'border-blue-200 shadow-sm' : 'opacity-75 bg-gray-50'}`}>
-                                <div className={`h-1 w-full ${order.orderStatus === 'Shipped' ? 'bg-blue-500' : 'bg-green-500'}`} />
+                            <Card key={order._id} className={`overflow-hidden transition-all ${order.orderStatus === 'Shipped' ? 'border-blue-200 shadow-sm' : 'opacity-90 bg-gray-50'}`}>
+                                <div className={`h-1 w-full ${order.orderStatus === 'Shipped' ? 'bg-blue-500' : order.orderStatus === 'Delivered' ? 'bg-green-500' : 'bg-gray-300'}`} />
                                 <CardContent className="p-5">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="font-mono text-sm font-bold text-gray-700">#{order.orderId ? order.orderId.slice(-6) : order._id.slice(-6)}</span>
-                                                <Badge variant={order.orderStatus === 'Shipped' ? 'default' : 'secondary'} className={order.orderStatus === 'Shipped' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' : 'bg-green-100 text-green-700'}>
+                                                <Badge variant={order.orderStatus === 'Shipped' ? 'default' : 'secondary'} className={order.orderStatus === 'Shipped' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' : ''}>
                                                     {order.orderStatus}
                                                 </Badge>
                                             </div>
@@ -187,11 +212,14 @@ export default function DeliveryDashboard() {
                                                 Mark Delivered
                                             </Button>
                                         )}
+                                        {order.orderStatus !== 'Shipped' && order.orderStatus !== 'Delivered' && order.orderStatus !== 'Cancelled' && (
+                                            <Badge variant="outline" className="text-gray-500 text-xs">Waiting for Dispatch</Badge>
+                                        )}
                                     </div>
 
                                     <div className="grid gap-4 md:grid-cols-2">
                                         {/* Customer Info */}
-                                        <div className="bg-gray-50 p-3 rounded-md">
+                                        <div className="bg-white p-3 rounded-md border border-gray-100">
                                             <div className="flex items-start gap-2">
                                                 <User className="w-4 h-4 text-gray-500 mt-1" />
                                                 <div>
@@ -205,7 +233,7 @@ export default function DeliveryDashboard() {
                                         </div>
 
                                         {/* Address Info */}
-                                        <div className="bg-gray-50 p-3 rounded-md">
+                                        <div className="bg-white p-3 rounded-md border border-gray-100">
                                             <div className="flex items-start gap-2">
                                                 <MapPin className="w-4 h-4 text-gray-500 mt-1" />
                                                 <div className="text-sm text-gray-600">
@@ -232,7 +260,10 @@ export default function DeliveryDashboard() {
                                         <span className="text-sm text-gray-600">
                                             {order.totalQuantity} laddus ({order.phase})
                                         </span>
-                                        <span className="font-bold text-gray-900">₹{order.totalPrice}</span>
+                                        <div className="text-right">
+                                            <span className="block font-bold text-gray-900">₹{order.totalPrice}</span>
+                                            <span className="text-xs text-gray-500">{order.paymentMethod}</span>
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>

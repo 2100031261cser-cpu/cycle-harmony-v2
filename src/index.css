@@ -34,11 +34,11 @@
     /* Light yellow */
     --accent-foreground: 25 30% 25%;
 
-    --wellness-cream: 42 50% 96%;
-    --wellness-pink: 340 50% 85%;
+    --wellness-cream: 48 100% 93%;
+    --wellness-pink: 351 100% 86%;
     --wellness-yellow: 50 65% 88%;
-    --wellness-green: 120 25% 55%;
-    --wellness-green-light: 120 35% 85%;
+    --wellness-green: 122 39% 49%;
+    --wellness-green-light: 122 39% 85%;
 
     --muted: 42 30% 90%;
     --muted-foreground: 25 20% 45%;
@@ -79,10 +79,10 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Wellness-themed colors */
-    --wellness-pink: 340 75% 85%;
-    --wellness-green: 140 45% 70%;
-    --wellness-cream: 40 40% 95%;
+    /* Wellness-themed colors - ENHANCED */
+    --wellness-pink: 340 75% 88%;
+    --wellness-green: 140 45% 55%;
+    --wellness-cream: 40 50% 97%;
   }
 
   .dark {
@@ -141,7 +141,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground bg-gradient-to-b from-wellness-cream via-wellness-green-light/40 to-wellness-pink/40;
     font-family: var(--font-body);
     margin: 0;
     padding: 0;
@@ -156,6 +156,39 @@
   h5,
   h6 {
     font-family: var(--font-heading);
+  }
+
+  .noise-bg {
+    position: relative;
+  }
+
+  .noise-bg::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.4;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
   }
 }
 

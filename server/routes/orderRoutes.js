@@ -7,10 +7,12 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const PDFDocument = require('pdfkit-table');
 
+import { protect } from '../middleware/auth.js';
+
 const router = express.Router();
 
 // Get Revenue Chart Data
-router.get('/orders/revenue-chart', async (req, res) => {
+router.get('/orders/revenue-chart', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
 
@@ -72,7 +74,7 @@ router.get('/orders/revenue-chart', async (req, res) => {
 });
 
 // Get Monthly Summary Stats
-router.get('/orders/monthly-summary', async (req, res) => {
+router.get('/orders/monthly-summary', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
     const now = new Date();
@@ -144,7 +146,7 @@ router.get('/orders/monthly-summary', async (req, res) => {
 });
 
 // Get Detailed Orders Report (List)
-router.get('/orders/report', async (req, res) => {
+router.get('/orders/report', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
     const now = new Date();
@@ -171,7 +173,7 @@ router.get('/orders/report', async (req, res) => {
 
 
 // Export PDF Report
-router.get('/orders/export/pdf', async (req, res) => {
+router.get('/orders/export/pdf', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
     const now = new Date();
@@ -246,7 +248,7 @@ router.get('/orders/export/pdf', async (req, res) => {
 });
 
 // Export CSV Report
-router.get('/orders/export/csv', async (req, res) => {
+router.get('/orders/export/csv', protect, async (req, res) => {
   try {
     const { month, year } = req.query;
     const now = new Date();
@@ -426,7 +428,7 @@ router.post('/orders', async (req, res) => {
 });
 
 // Stats endpoint
-router.get('/orders/stats', async (req, res) => {
+router.get('/orders/stats', protect, async (req, res) => {
   try {
     const stats = await Order.aggregate([
       {
@@ -456,7 +458,7 @@ router.get('/orders/stats', async (req, res) => {
 });
 
 // Get all orders (with optional filters)
-router.get('/orders', async (req, res) => {
+router.get('/orders', protect, async (req, res) => {
   try {
     // Check if MongoDB is connected
 
@@ -473,12 +475,15 @@ router.get('/orders', async (req, res) => {
       });
     }
 
-    const { phone, status, search, page = 1, limit = 10 } = req.query;
+    const { phone, status, search, page = 1, limit = 10, deliveryBoy } = req.query;
 
     const query = {};
 
     // Exact phone match
     if (phone) query.phone = phone;
+
+    // Delivery Boy filter
+    if (deliveryBoy) query.deliveryBoy = deliveryBoy;
 
     // Status filter
     if (status) query.orderStatus = status;
