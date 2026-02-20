@@ -232,7 +232,7 @@ export default function CustomerProfile() {
                                                 <div className="flex justify-between items-end">
                                                     <div>
                                                         <p className="text-4xl font-black mb-1">{orders[0].orderStatus}</p>
-                                                        <p className="text-white/80 text-sm">#{orders[0]._id.slice(-6).toUpperCase()} • {orders[0].phase}</p>
+                                                        <p className="text-white/80 text-sm">#{orders[0].orderId || orders[0]._id.slice(-6).toUpperCase()} • {orders[0].phase}</p>
                                                     </div>
                                                     <Button onClick={() => setActiveTab("orders")} variant="secondary" className="bg-white text-pink-600 hover:bg-gray-100">
                                                         Track Order
@@ -274,7 +274,7 @@ export default function CustomerProfile() {
                                                                 <Package className="w-6 h-6 text-gray-400" />
                                                             </div>
                                                             <div>
-                                                                <p className="font-bold text-gray-900">Order #{order._id.slice(-6).toUpperCase()}</p>
+                                                                <p className="font-bold text-gray-900">Order #{order.orderId || order._id.slice(-6).toUpperCase()}</p>
                                                                 <p className="text-xs text-gray-400 flex items-center gap-1">
                                                                     <Calendar className="w-3 h-3" />
                                                                     {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
