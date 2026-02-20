@@ -571,7 +571,7 @@ router.get('/orders/:id', async (req, res) => {
 // Update order status
 router.patch('/orders/:id/status', async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, deliveryDate } = req.body;
 
     const validStatuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
     if (!validStatuses.includes(status)) {
@@ -581,9 +581,14 @@ router.patch('/orders/:id/status', async (req, res) => {
       });
     }
 
+    const updateData = { orderStatus: status };
+    if (deliveryDate) {
+      updateData.deliveryDate = new Date(deliveryDate);
+    }
+
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { orderStatus: status },
+      updateData,
       { new: true, runValidators: true }
     );
 

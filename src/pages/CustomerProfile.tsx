@@ -250,6 +250,17 @@ export default function CustomerProfile() {
                                                         Track Order
                                                     </Button>
                                                 </div>
+                                                {orders[0].deliveryDate && (
+                                                    <div className="mt-4 pt-4 border-t border-white/20 flex items-center gap-3">
+                                                        <div className="bg-white/20 p-2 rounded-lg">
+                                                            <Calendar className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] text-white/70 uppercase font-bold tracking-widest">Expected Delivery</p>
+                                                            <p className="font-bold text-lg">{new Date(orders[0].deliveryDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     )}
@@ -297,6 +308,12 @@ export default function CustomerProfile() {
                                                             <div className="space-y-1 text-sm">
                                                                 <p className="text-gray-700 font-medium">{order.phase} Healthy Laddus</p>
                                                                 <p className="text-gray-500 text-xs">{order.totalWeight}g • {order.cycleLength} Day Cycle</p>
+                                                                {order.deliveryDate && (
+                                                                    <div className="flex items-center gap-1.5 text-green-600 font-bold mt-1">
+                                                                        <Truck className="w-3 h-3" />
+                                                                        <span className="text-[10px]">Expected: {new Date(order.deliveryDate).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                )}
                                                                 {order.paymentMethod && (
                                                                     <p className="text-pink-600 text-xs font-bold mt-2">Paid via {order.paymentMethod}</p>
                                                                 )}

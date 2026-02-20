@@ -112,6 +112,9 @@ const orderSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  deliveryDate: {
+    type: Date
+  },
 
   // Additional Information
   message: {

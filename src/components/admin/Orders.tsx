@@ -19,7 +19,7 @@ interface OrdersProps {
     setOrderFilter: (filter: string) => void;
     searchQuery: string;
     setSearchQuery: (query: string) => void;
-    handleStatusUpdate: (id: string, status: string) => void;
+    handleStatusUpdate: (id: string, status: string, deliveryDate?: string) => void;
     handleDeleteClick: (id: string) => void;
     handleEditClick: (order: any) => void;
     handleWhatsAppSend: (order: any) => void;
@@ -45,6 +45,10 @@ export function Orders({
 }: OrdersProps) {
 
     const [paymentFilter, setPaymentFilter] = useState("all");
+    const [isDateDialogOpen, setIsDateDialogOpen] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [tempStatus, setTempStatus] = useState<string>("");
+    const [deliveryDate, setDeliveryDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
     const filteredOrders = orders.filter(o => {
         const matchesStatus = orderFilter === 'all' || o.orderStatus === orderFilter;
@@ -63,8 +67,53 @@ export function Orders({
         setExpandedOrderId(expandedOrderId === id ? null : id);
     };
 
+    const onStatusChange = (id: string, status: string) => {
+        if (status === "Confirmed") {
+            setSelectedOrderId(id);
+            setTempStatus(status);
+            setIsDateDialogOpen(true);
+        } else {
+            handleStatusUpdate(id, status);
+        }
+    };
+
+    const confirmWithDate = () => {
+        if (selectedOrderId) {
+            handleStatusUpdate(selectedOrderId, tempStatus, deliveryDate);
+            setIsDateDialogOpen(false);
+            setSelectedOrderId(null);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Delivery Date Selection Dialog */}
+            <Dialog open={isDateDialogOpen} onOpenChange={setIsDateDialogOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Set Delivery Date</DialogTitle>
+                        <DialogDescription>
+                            Please select the expected delivery date for this confirmed order.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label className="text-right">Date</Label>
+                            <Input
+                                type="date"
+                                value={deliveryDate}
+                                onChange={(e) => setDeliveryDate(e.target.value)}
+                                className="col-span-3"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDateDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={confirmWithDate} className="bg-pink-500 hover:bg-pink-600">Confirm Order</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Advanced Filters Bar */}
             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md border-none space-y-4">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -110,8 +159,8 @@ export function Orders({
                             key={status.value}
                             onClick={() => setOrderFilter(status.value)}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${orderFilter === status.value
-                                    ? "bg-pink-500 text-white shadow-md shadow-pink-200"
-                                    : "bg-gray-50 text-gray-500 hover:bg-pink-50 hover:text-pink-600"
+                                ? "bg-pink-500 text-white shadow-md shadow-pink-200"
+                                : "bg-gray-50 text-gray-500 hover:bg-pink-50 hover:text-pink-600"
                                 }`}
                         >
                             {status.label}
@@ -181,7 +230,7 @@ export function Orders({
                                         <div className="flex items-center gap-2 w-full md:w-auto flex-wrap justify-end">
                                             <Select
                                                 value={order.orderStatus}
-                                                onValueChange={(value) => handleStatusUpdate(order._id, value)}
+                                                onValueChange={(value) => onStatusChange(order._id, value)}
                                             >
                                                 <SelectTrigger className="w-[130px] h-9 text-xs">
                                                     <SelectValue />
