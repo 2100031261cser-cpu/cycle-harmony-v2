@@ -225,7 +225,7 @@ router.get('/orders/export/pdf', protect, async (req, res) => {
       ],
       datas: orders.map(order => ({
         date: new Date(order.createdAt).toLocaleDateString(),
-        orderId: order.orderId || order._id.toString().slice(-6).toUpperCase(),
+        orderId: order.orderId || order._id.toString().substring(order._id.toString().length - 6).toUpperCase(),
         customer: order.fullName,
         phase: order.phase,
         qty: order.totalQuantity,

@@ -192,7 +192,7 @@ export default function DeliveryDashboard() {
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-mono text-sm font-bold text-gray-700">#{order.orderId ? order.orderId.slice(-6) : order._id.slice(-6)}</span>
+                                                <span className="font-mono text-sm font-bold text-gray-700">#{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}</span>
                                                 <Badge variant={order.orderStatus === 'Shipped' ? 'default' : 'secondary'} className={order.orderStatus === 'Shipped' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' : ''}>
                                                     {order.orderStatus}
                                                 </Badge>
@@ -237,6 +237,9 @@ export default function DeliveryDashboard() {
                                             <div className="flex items-start gap-2">
                                                 <MapPin className="w-4 h-4 text-gray-500 mt-1" />
                                                 <div className="text-sm text-gray-600">
+                                                    <p className="font-mono text-gray-600 mb-1">
+                                                        #{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}
+                                                    </p>
                                                     <p>{order.address.house}</p>
                                                     <p>{order.address.area}</p>
                                                     {order.address.landmark && <p className="text-xs text-gray-500 mt-0.5">Note: {order.address.landmark}</p>}

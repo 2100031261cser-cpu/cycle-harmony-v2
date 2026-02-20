@@ -212,7 +212,7 @@ export function Customers({ customers, orders, handleEditCustomerClick, handleDe
                                                 <div className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                                                     <div className="flex justify-between items-start mb-2">
                                                         <div>
-                                                            <p className="font-bold text-gray-800">Order #{order.orderId || (order._id ? order._id.slice(-6) : 'N/A')}</p>
+                                                            <p className="font-bold text-gray-800">Order #{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}</p>
                                                             <p className="text-xs text-gray-500">
                                                                 {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'Unknown Date'}
                                                                 {' '}at{' '}

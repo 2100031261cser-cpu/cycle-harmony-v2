@@ -299,7 +299,7 @@ export function Reports({
                                                             {new Date(order.createdAt).toLocaleDateString()}
                                                         </td>
                                                         <td className="px-6 py-3 font-mono text-gray-600">
-                                                            #{order.orderId || order._id.slice(-6).toUpperCase()}
+                                                            #{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}
                                                         </td>
                                                         <td className="px-6 py-3">
                                                             <p className="font-medium text-gray-900">{order.fullName}</p>

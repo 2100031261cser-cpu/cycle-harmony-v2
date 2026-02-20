@@ -208,7 +208,7 @@ export default function AdminDashboard() {
   const handleWhatsAppSend = (order: any) => {
     let message = "";
     const customerName = order.fullName || "Valued Customer";
-    const orderId = order.orderId || (order._id ? order._id.slice(-6).toUpperCase() : 'N/A');
+    const orderId = order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A');
 
     if (order.orderStatus === 'Confirmed') {
       message = `Hi ${customerName}, your order (ID: ${orderId}) is confirmed ${String.fromCodePoint(0x2705)}`;

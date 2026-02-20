@@ -186,7 +186,7 @@ export function Orders({
                                     <div className="flex-1 space-y-4">
                                         <div className="flex items-center justify-between md:justify-start gap-4">
                                             <StatusBadge status={order.orderStatus} />
-                                            <span className="text-xs text-gray-400 font-mono">#{order.orderId || (order._id ? order._id.slice(-6) : 'N/A')}</span>
+                                            <span className="text-xs text-gray-400 font-mono">#{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}</span>
                                             {/* Delivery Boy Badge */}
                                             {order.deliveryBoy && (
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 flex items-center gap-1">
