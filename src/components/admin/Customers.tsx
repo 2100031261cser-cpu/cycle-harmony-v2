@@ -8,6 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "./StatusBadge";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 
 interface CustomersProps {
     customers: any[];
@@ -57,56 +65,78 @@ export function Customers({ customers, orders, handleEditCustomerClick, handleDe
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCustomers.map((customer) => (
-                    <Card key={customer.phone || Math.random()} className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-none overflow-hidden">
-                        <CardContent className="p-6">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
-                                        <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-500 text-white font-bold text-lg">
-                                            {customer.fullName?.charAt(0) || 'C'}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900 group-hover:text-pink-600 transition-colors">{customer.fullName || 'Unknown'}</h3>
-                                        <p className="text-xs text-gray-500 font-mono">{customer.customerId}</p>
+            <Card className="border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-gray-50/50">
+                        <TableRow>
+                            <TableHead className="font-bold">Customer</TableHead>
+                            <TableHead className="font-bold">Phone</TableHead>
+                            <TableHead className="font-bold text-center">Orders</TableHead>
+                            <TableHead className="font-bold text-center">Spent</TableHead>
+                            <TableHead className="font-bold text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredCustomers.map((customer) => (
+                            <TableRow key={customer.phone || Math.random()} className="hover:bg-pink-50/30 transition-colors group">
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm shrink-0">
+                                            <AvatarFallback className="bg-gradient-to-br from-pink-400 to-purple-500 text-white font-bold text-xs">
+                                                {customer.fullName?.charAt(0) || 'C'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-bold text-gray-900 group-hover:text-pink-600 transition-colors">
+                                                {customer.fullName || 'Unknown'}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500 font-mono tracking-tighter uppercase">{customer.customerId}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-600" onClick={() => setSelectedCustomer(customer)}>
-                                    <Edit className="w-4 h-4" />
-                                </Button>
-                            </div>
-
-                            <div className="mt-6 grid grid-cols-2 gap-4">
-                                <div className="bg-pink-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs font-bold text-pink-400 uppercase tracking-wider">Orders</p>
-                                    <p className="text-xl font-bold text-pink-700">{customer.totalOrders || 0}</p>
-                                </div>
-                                <div className="bg-green-50 rounded-lg p-3 text-center">
-                                    <p className="text-xs font-bold text-green-400 uppercase tracking-wider">Spent</p>
-                                    <p className="text-xl font-bold text-green-700">₹{(customer.totalSpent || 0).toLocaleString()}</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 flex items-center justify-between text-sm">
-                                <div className="flex items-center text-gray-500">
-                                    <Phone className="w-3.5 h-3.5 mr-2" />
+                                </TableCell>
+                                <TableCell className="font-medium text-gray-600">
                                     {customer.phone || 'N/A'}
-                                </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="ml-auto text-xs"
-                                    onClick={() => setSelectedCustomer(customer)}
-                                >
-                                    View History
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <Badge variant="secondary" className="bg-pink-100 text-pink-700 hover:bg-pink-100 rounded-md font-bold px-2 py-0.5">
+                                        {customer.totalOrders || 0}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-center font-bold text-green-600">
+                                    ₹{(customer.totalSpent || 0).toLocaleString()}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex justify-end gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-8 w-8 p-0 text-gray-400 hover:text-pink-600 hover:bg-pink-50"
+                                            onClick={() => handleEditCustomerClick(customer)}
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 text-xs font-semibold border-gray-100 hover:border-pink-200 hover:bg-white text-gray-600 hover:text-pink-600"
+                                            onClick={() => setSelectedCustomer(customer)}
+                                        >
+                                            History
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {filteredCustomers.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-32 text-center text-gray-500">
+                                    No customers found matching your search.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </Card>
 
             {/* Customer Details Dialog */}
             <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
