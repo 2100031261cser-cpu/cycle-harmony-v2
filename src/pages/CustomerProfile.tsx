@@ -192,7 +192,7 @@ export default function CustomerProfile() {
                             {/* Overview Tab */}
                             {activeTab === "overview" && (
                                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                         <Card className="border-none shadow-lg bg-white overflow-hidden group">
                                             <CardContent className="p-6">
                                                 <div className="flex items-center justify-between mb-4">
@@ -206,18 +206,6 @@ export default function CustomerProfile() {
                                             </CardContent>
                                         </Card>
                                         <Card className="border-none shadow-lg bg-white overflow-hidden">
-                                            <CardContent className="p-6">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                                                        <CreditCard className="w-5 h-5 text-green-500" />
-                                                    </div>
-                                                    <Badge className="bg-green-50 text-green-600 border-none">Spent</Badge>
-                                                </div>
-                                                <p className="text-3xl font-black text-gray-900">₹{orders.reduce((acc, o) => acc + (o.totalPrice || 0), 0)}</p>
-                                                <p className="text-sm text-gray-500 font-medium">Lifetime Spent</p>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="border-none shadow-lg bg-white overflow-hidden sm:col-span-2 lg:col-span-1">
                                             <CardContent className="p-6">
                                                 <div className="flex items-center justify-between mb-4">
                                                     <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
