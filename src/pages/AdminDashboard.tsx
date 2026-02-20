@@ -514,6 +514,8 @@ export default function AdminDashboard() {
           orders={orders}
           orderFilter={orderFilter}
           setOrderFilter={setOrderFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           handleStatusUpdate={handleStatusUpdate}
           handleDeleteClick={handleDeleteClick}
           handleEditClick={handleEditClick}

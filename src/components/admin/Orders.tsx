@@ -17,24 +17,45 @@ interface OrdersProps {
     orders: any[];
     orderFilter: string;
     setOrderFilter: (filter: string) => void;
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
     handleStatusUpdate: (id: string, status: string) => void;
     handleDeleteClick: (id: string) => void;
     handleEditClick: (order: any) => void;
     handleWhatsAppSend: (order: any) => void;
-    handleAssignDeliveryClick: (order: any) => void; // New prop
+    handleAssignDeliveryClick: (order: any) => void;
     sentMessages: Set<string>;
     handleExportCSV: () => void;
 }
 
+const statusOptions = [
+    { label: "All", value: "all" },
+    { label: "Pending", value: "Pending" },
+    { label: "Confirmed", value: "Confirmed" },
+    { label: "Processing", value: "Processing" },
+    { label: "Shipped", value: "Shipped" },
+    { label: "Delivered", value: "Delivered" },
+    { label: "Cancelled", value: "Cancelled" },
+];
+
 export function Orders({
-    orders, orderFilter, setOrderFilter, handleStatusUpdate,
+    orders, orderFilter, setOrderFilter, searchQuery, setSearchQuery, handleStatusUpdate,
     handleDeleteClick, handleEditClick, handleWhatsAppSend, handleAssignDeliveryClick,
     sentMessages, handleExportCSV
 }: OrdersProps) {
 
-    const filteredOrders = orderFilter === 'all'
-        ? orders
-        : orders.filter(o => o.orderStatus === orderFilter);
+    const [paymentFilter, setPaymentFilter] = useState("all");
+
+    const filteredOrders = orders.filter(o => {
+        const matchesStatus = orderFilter === 'all' || o.orderStatus === orderFilter;
+        const matchesPayment = paymentFilter === 'all' || o.paymentMethod === paymentFilter;
+        const matchesSearch = !searchQuery ||
+            (o.fullName && o.fullName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (o.phone && o.phone.includes(searchQuery)) ||
+            (o.orderId && o.orderId.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        return matchesStatus && matchesPayment && matchesSearch;
+    });
 
     const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
@@ -44,30 +65,59 @@ export function Orders({
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Filters Bar */}
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md border-none">
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                    <Select value={orderFilter} onValueChange={setOrderFilter}>
-                        <SelectTrigger className="w-[180px] bg-gray-50 border-gray-200 focus:ring-pink-500">
-                            <SelectValue placeholder="Filter by status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Orders</SelectItem>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Confirmed">Confirmed</SelectItem>
-                            <SelectItem value="Processing">Processing</SelectItem>
-                            <SelectItem value="Shipped">Shipped</SelectItem>
-                            <SelectItem value="Delivered">Delivered</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                    </Select>
+            {/* Advanced Filters Bar */}
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-md border-none space-y-4">
+                <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-96">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                            placeholder="Search by name, phone, or ID..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 bg-gray-50 border-gray-100 focus:ring-pink-500 h-10 rounded-lg"
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        {/* Payment Method Filter */}
+                        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                            <SelectTrigger className="w-full md:w-[160px] bg-gray-50 border-gray-100 h-10 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <Filter className="w-3.5 h-3.5 text-gray-400" />
+                                    <SelectValue placeholder="Payment Method" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Payments</SelectItem>
+                                <SelectItem value="Cash on Delivery">Cash on Delivery</SelectItem>
+                                <SelectItem value="Online (Razorpay)">Razorpay</SelectItem>
+                                <SelectItem value="UPI">UPI</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Button onClick={handleExportCSV} variant="outline" className="h-10 border-gray-100 hover:bg-gray-50 text-gray-700 rounded-lg shrink-0">
+                            <Download className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">Export</span>
+                        </Button>
+                    </div>
                 </div>
 
-                <Button onClick={handleExportCSV} variant="outline" className="w-full md:w-auto border-gray-200 hover:bg-gray-50 text-gray-700">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
-                </Button>
+                {/* Status Quick Filters */}
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
+                    {statusOptions.map((status) => (
+                        <button
+                            key={status.value}
+                            onClick={() => setOrderFilter(status.value)}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${orderFilter === status.value
+                                    ? "bg-pink-500 text-white shadow-md shadow-pink-200"
+                                    : "bg-gray-50 text-gray-500 hover:bg-pink-50 hover:text-pink-600"
+                                }`}
+                        >
+                            {status.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Orders List */}
