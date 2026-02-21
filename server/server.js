@@ -17,7 +17,12 @@ const app = express();
 connectDB();
 
 // Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:8080', 'http://localhost:8081'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'https://remarkable-tarsier-af2904.netlify.app',
+  'https://cycle-harmony-v2.netlify.app'
+];
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
