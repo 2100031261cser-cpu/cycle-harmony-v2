@@ -7,7 +7,6 @@ import { CycleTimeline } from "@/components/CycleTimeline";
 import { WhyChooseSection } from "@/components/WhyChooseSection";
 import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { FAQSection } from "@/components/FAQSection";
-import { CTASection } from "@/components/CTASection";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FadeIn } from "@/components/FadeIn";
@@ -79,10 +78,6 @@ const Index = () => {
 
       <FadeIn>
         <FAQSection />
-      </FadeIn>
-
-      <FadeIn>
-        <CTASection />
       </FadeIn>
 
       <Footer />
