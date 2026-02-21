@@ -20,7 +20,7 @@ import { Customers } from "@/components/admin/Customers";
 import { Orders } from "@/components/admin/Orders";
 import { Reports } from "@/components/admin/Reports";
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://cycle-harmony-v2.onrender.com/api';
 
 const DELIVERY_BOYS = ["Ram"];
 
@@ -631,11 +631,11 @@ export default function AdminDashboard() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Weight (g)</Label>
+                <Label>Price (₹) - Live Test</Label>
                 <Input type="number" value={editForm.totalWeight} onChange={e => setEditForm({ ...editForm, totalWeight: +e.target.value })} />
               </div>
               <div className="grid gap-2">
-                <Label>Price (₹)</Label>
+                <Label>Price (₹) - Dep Test</Label>
                 <Input type="number" value={editForm.totalPrice} onChange={e => setEditForm({ ...editForm, totalPrice: +e.target.value })} />
               </div>
             </div>
