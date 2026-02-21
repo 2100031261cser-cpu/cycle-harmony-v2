@@ -90,6 +90,9 @@ export function Sidebar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenu
                     <LogOut className="w-5 h-5 mr-3" />
                     Logout
                 </Button>
+                <div className="mt-2 px-2">
+                    <p className="text-[10px] text-gray-400 font-mono">Ver: v1.1.2-reports-fix</p>
+                </div>
             </div>
         </aside>
     );

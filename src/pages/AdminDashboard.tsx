@@ -21,6 +21,7 @@ import { Orders } from "@/components/admin/Orders";
 import { Reports } from "@/components/admin/Reports";
 
 const API_BASE_URL = '/api';
+const APP_VERSION = 'v1.1.2-reports-fix';
 
 const DELIVERY_BOYS = ["Ram"];
 
