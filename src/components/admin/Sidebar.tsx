@@ -17,81 +17,85 @@ export function Sidebar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenu
       ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
       h-full overflow-y-auto shadow-xl md:shadow-none
     `}>
-            <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-transparent">
-                <div>
-                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Admin<span className="text-pink-600">Panel</span></h1>
-                    <p className="text-xs font-medium text-green-600 mt-0.5">Cycle Harmony Laddus</p>
+            <div className="flex flex-col h-full">
+                <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-transparent">
+                    <div>
+                        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Admin<span className="text-pink-600">Panel</span></h1>
+                        <p className="text-xs font-medium text-green-600 mt-0.5">Cycle Harmony Laddus</p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(false)}>
+                        <X className="h-5 w-5" />
+                    </Button>
                 </div>
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMobileMenuOpen(false)}>
-                    <X className="h-5 w-5" />
-                </Button>
-            </div>
 
-            <nav className="p-4 space-y-2 mt-4">
-                {/* Overview */}
-                <Button
-                    variant="ghost"
-                    onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
-                    className={`w-full justify-start transition-all duration-200 ${activeTab === 'overview'
-                        ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
-                        : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }`}
-                >
-                    <LayoutDashboard className={`w-5 h-5 mr-3 ${activeTab === 'overview' ? 'text-pink-600' : 'text-gray-400'}`} />
-                    Overview
-                </Button>
+                <div className="flex-1 overflow-y-auto">
+                    <nav className="p-4 space-y-2 mt-4">
+                        {/* Overview */}
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }}
+                            className={`w-full justify-start transition-all duration-200 ${activeTab === 'overview'
+                                ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
+                                : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
+                                }`}
+                        >
+                            <LayoutDashboard className={`w-5 h-5 mr-3 ${activeTab === 'overview' ? 'text-pink-600' : 'text-gray-400'}`} />
+                            Overview
+                        </Button>
 
-                {/* Orders */}
-                <Button
-                    variant="ghost"
-                    onClick={() => { setActiveTab('orders'); setMobileMenuOpen(false); }}
-                    className={`w-full justify-start transition-all duration-200 ${activeTab === 'orders'
-                        ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
-                        : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }`}
-                >
-                    <ShoppingBag className={`w-5 h-5 mr-3 ${activeTab === 'orders' ? 'text-pink-600' : 'text-gray-400'}`} />
-                    Orders
-                </Button>
+                        {/* Orders */}
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setActiveTab('orders'); setMobileMenuOpen(false); }}
+                            className={`w-full justify-start transition-all duration-200 ${activeTab === 'orders'
+                                ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
+                                : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
+                                }`}
+                        >
+                            <ShoppingBag className={`w-5 h-5 mr-3 ${activeTab === 'orders' ? 'text-pink-600' : 'text-gray-400'}`} />
+                            Orders
+                        </Button>
 
-                {/* Customers */}
-                <Button
-                    variant="ghost"
-                    onClick={() => { setActiveTab('customers'); setMobileMenuOpen(false); }}
-                    className={`w-full justify-start transition-all duration-200 ${activeTab === 'customers'
-                        ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
-                        : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }`}
-                >
-                    <Users className={`w-5 h-5 mr-3 ${activeTab === 'customers' ? 'text-pink-600' : 'text-gray-400'}`} />
-                    Customers
-                </Button>
+                        {/* Customers */}
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setActiveTab('customers'); setMobileMenuOpen(false); }}
+                            className={`w-full justify-start transition-all duration-200 ${activeTab === 'customers'
+                                ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
+                                : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
+                                }`}
+                        >
+                            <Users className={`w-5 h-5 mr-3 ${activeTab === 'customers' ? 'text-pink-600' : 'text-gray-400'}`} />
+                            Customers
+                        </Button>
 
-                {/* Reports */}
-                <Button
-                    variant="ghost"
-                    onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
-                    className={`w-full justify-start transition-all duration-200 ${activeTab === 'reports'
-                        ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
-                        : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }`}
-                >
-                    <BarChart3 className={`w-5 h-5 mr-3 ${activeTab === 'reports' ? 'text-pink-600' : 'text-gray-400'}`} />
-                    Reports
-                </Button>
-            </nav>
+                        {/* Reports */}
+                        <Button
+                            variant="ghost"
+                            onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }}
+                            className={`w-full justify-start transition-all duration-200 ${activeTab === 'reports'
+                                ? 'bg-pink-50 text-pink-700 font-semibold shadow-sm'
+                                : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
+                                }`}
+                        >
+                            <BarChart3 className={`w-5 h-5 mr-3 ${activeTab === 'reports' ? 'text-pink-600' : 'text-gray-400'}`} />
+                            Reports
+                        </Button>
+                    </nav>
+                </div>
 
-            <div className="absolute bottom-0 w-full p-4 border-t border-gray-50 bg-white/50 backdrop-blur-sm">
-                <Button
-                    variant="ghost"
-                    onClick={handleLogout}
-                    className="w-full justify-start text-gray-500 hover:text-red-600 hover:bg-red-50 hover:shadow-sm transition-all"
-                >
-                    <LogOut className="w-5 h-5 mr-3" />
-                    Logout
-                </Button>
-                <div className="mt-2 px-2">
-                    <p className="text-[10px] text-gray-400 font-mono">Ver: v1.1.2-reports-fix</p>
+                <div className="mt-auto p-4 border-t border-gray-50 bg-white/50 backdrop-blur-sm">
+                    <Button
+                        variant="ghost"
+                        onClick={handleLogout}
+                        className="w-full justify-start text-gray-500 hover:text-red-600 hover:bg-red-50 hover:shadow-sm transition-all"
+                    >
+                        <LogOut className="w-5 h-5 mr-3" />
+                        Logout
+                    </Button>
+                    <div className="mt-2 px-2">
+                        <p className="text-[10px] text-gray-400 font-mono">Ver: v1.1.2-reports-fix</p>
+                    </div>
                 </div>
             </div>
         </aside>
