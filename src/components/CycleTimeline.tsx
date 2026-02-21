@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Sun } from "lucide-react";
 
 const timelineData = [
     {
@@ -62,30 +63,12 @@ export const CycleTimeline = () => {
                     <CardContent className="p-0">
                         {/* Header Icons */}
                         <div className="flex justify-between items-center mb-12 px-4 md:px-20">
+                            {/* Phase 1 Sun */}
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative w-32 h-32 flex items-center justify-center">
-                                    {/* Custom Laddu Icon - Pyramid of 3 */}
-                                    <div className="relative w-24 h-24">
-                                        {/* Top Laddu */}
-                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-[#FDE047] shadow-lg flex items-center justify-center overflow-hidden">
-                                            <div className="w-1 h-1 bg-red-400 rounded-full absolute top-3 left-4"></div>
-                                            <div className="w-1 h-1 bg-green-400 rounded-full absolute top-5 left-7"></div>
-                                            <div className="w-1 h-1 bg-orange-400 rounded-full absolute bottom-3 left-5"></div>
-                                        </div>
-                                        {/* Bottom Left Laddu */}
-                                        <div className="absolute bottom-0 left-0 w-12 h-12 rounded-full bg-[#FDE047] shadow-lg flex items-center justify-center overflow-hidden">
-                                            <div className="w-1 h-1 bg-red-400 rounded-full absolute top-4 left-3"></div>
-                                            <div className="w-1 h-1 bg-green-400 rounded-full absolute top-2 left-6"></div>
-                                        </div>
-                                        {/* Bottom Right Laddu */}
-                                        <div className="absolute bottom-0 right-0 w-12 h-12 rounded-full bg-[#FDE047] shadow-lg flex items-center justify-center overflow-hidden">
-                                            <div className="w-1 h-1 bg-red-400 rounded-full absolute top-3 left-5"></div>
-                                            <div className="w-1 h-1 bg-green-400 rounded-full absolute bottom-4 left-3"></div>
-                                        </div>
-                                        {/* Leaves */}
-                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 text-yellow-500">
-                                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" /></svg>
-                                        </div>
+                                    <div className="relative w-24 h-24 rounded-full bg-[#FDE047] shadow-lg flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-yellow-300/30 rounded-full animate-pulse-slow"></div>
+                                        <Sun className="w-12 h-12 text-yellow-600" />
                                     </div>
                                 </div>
                                 <div className="text-center">
@@ -94,11 +77,12 @@ export const CycleTimeline = () => {
                                 </div>
                             </div>
 
+                            {/* Phase 2 Sun */}
                             <div className="flex flex-col items-center gap-4">
                                 <div className="relative w-32 h-32 flex items-center justify-center">
-                                    {/* Custom Moon Icon */}
-                                    <div className="relative w-24 h-24 rounded-full bg-[#FEF08A] shadow-lg overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-12 h-24 bg-[#FDE047] rounded-r-full opacity-80"></div>
+                                    <div className="relative w-24 h-24 rounded-full bg-[#FDE047] shadow-lg flex items-center justify-center">
+                                        <div className="absolute inset-0 bg-yellow-300/30 rounded-full animate-pulse-slow"></div>
+                                        <Sun className="w-12 h-12 text-yellow-600" />
                                     </div>
                                 </div>
                                 <div className="text-center">

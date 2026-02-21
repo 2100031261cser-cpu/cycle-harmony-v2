@@ -2,7 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Customer from '../models/Customer.js';
 import Order from '../models/Order.js';
+import Product from '../models/Product.js';
 import { generateCustomerId, generateOrderId } from '../utils/idGenerator.js';
+import { sendEmail, getOrderEmailTemplate } from '../utils/email.js';
+import { sendTelegramMessage } from '../utils/telegram.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const PDFDocument = require('pdfkit-table');
@@ -351,16 +354,23 @@ router.post('/orders', async (req, res) => {
       customer.name = fullName;
       if (age) customer.age = age;
 
-      // Add address if new
-      // Simple check to avoid duplicates (optional improvement)
-      customer.addresses.push({
-        house: address.house,
-        area: address.area,
-        landmark: address.landmark || '',
-        pincode: address.pincode,
-        mapLink: address.mapLink || '',
-        label: address.label || 'Home'
-      });
+      // Add address if new (deduplication)
+      const isDuplicate = customer.addresses.some(addr =>
+        addr.house.trim().toLowerCase() === address.house.trim().toLowerCase() &&
+        addr.area.trim().toLowerCase() === address.area.trim().toLowerCase() &&
+        addr.pincode.trim().toLowerCase() === address.pincode.trim().toLowerCase()
+      );
+
+      if (!isDuplicate) {
+        customer.addresses.push({
+          house: address.house,
+          area: address.area,
+          landmark: address.landmark || '',
+          pincode: address.pincode,
+          mapLink: address.mapLink || '',
+          label: address.label || 'Home'
+        });
+      }
       // We will push the order ID after saving the order
     } else {
       // Create new customer
@@ -423,9 +433,50 @@ router.post('/orders', async (req, res) => {
     // Save to database
     const savedOrder = await order.save();
 
-    // Link order to customer
+    // Link order to customer and update cycle data
     customer.orders.push(savedOrder._id);
+    customer.lastPeriodDate = new Date(periodsStarted);
+    customer.averageCycleLength = cycleLength;
     await customer.save();
+
+    // --- PHASE 1: INVENTORY & NOTIFICATIONS ---
+    // 1. Decrement Stock
+    try {
+      await Product.findOneAndUpdate(
+        { name: phase },
+        { $inc: { stock: -totalQuantity } } // Decrement by totalQuantity
+      );
+    } catch (err) {
+      console.error('Stock decrement error:', err);
+    }
+
+    // 2. Send Telegram Notification
+    try {
+      const telegramMsg = `
+🛍️ *New Order Received!*
+------------------------
+*Order ID:* ${newOrderId}
+*Customer:* ${fullName}
+*Phone:* ${phone}
+*Phase:* ${phase}
+*Quantity:* ${totalQuantity} Laddus
+*Amount:* ₹${totalPrice}
+*Payment:* ${paymentMethod || 'Cash on Delivery'}
+
+*Address:*
+${address.house}, ${address.area}, ${address.pincode}
+      `;
+      await sendTelegramMessage(telegramMsg.trim());
+    } catch (err) {
+      console.error('Telegram notification error:', err);
+    }
+
+    // 2. Send Email Notification
+    if (email) {
+      const { subject, html } = getOrderEmailTemplate(savedOrder, 'confirmation');
+      await sendEmail({ to: email, subject, html });
+    }
+    // --- END PHASE 1 ---
 
     res.status(201).json({
       success: true,
@@ -498,8 +549,8 @@ router.get('/orders', protect, async (req, res) => {
     // Exact phone match
     if (phone) query.phone = phone;
 
-    // Delivery Boy filter
-    if (deliveryBoy) query.deliveryBoy = deliveryBoy;
+    // Delivery Boy filter (case-insensitive)
+    if (deliveryBoy) query.deliveryBoy = new RegExp(`^${deliveryBoy}$`, 'i');
 
     // Status filter
     if (status) query.orderStatus = status;
@@ -677,6 +728,32 @@ router.delete('/orders/:id', async (req, res) => {
       message: 'Error deleting order',
       error: error.message
     });
+  }
+});
+
+// Get all products (inventory)
+router.get('/products', protect, async (req, res) => {
+  try {
+    const products = await Product.find({});
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Manual Email Notification
+router.post('/orders/:id/notify', protect, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+    if (!order.email) return res.status(400).json({ success: false, message: 'No email associated with this order' });
+
+    const { subject, html } = getOrderEmailTemplate(order, 'update');
+    const result = await sendEmail({ to: order.email, subject, html });
+
+    res.status(200).json({ success: true, simulated: result.simulated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

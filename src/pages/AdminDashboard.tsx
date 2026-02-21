@@ -22,7 +22,7 @@ import { Reports } from "@/components/admin/Reports";
 
 const API_BASE_URL = '/api';
 
-const DELIVERY_BOYS = ["Ram", "Shyam", "Krishna", "Raju", "Suresh", "Mahesh"];
+const DELIVERY_BOYS = ["Ram"];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -31,6 +31,7 @@ export default function AdminDashboard() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -80,6 +81,12 @@ export default function AdminDashboard() {
     phone: ''
   });
 
+  // Tracking state for sent emails
+  const [sentEmails, setSentEmails] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('sentEmails');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
   // WhatsApp Button State
   const [sentMessages, setSentMessages] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('sentWhatsAppMessages');
@@ -89,6 +96,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     localStorage.setItem('sentWhatsAppMessages', JSON.stringify(Array.from(sentMessages)));
   }, [sentMessages]);
+
+  useEffect(() => {
+    localStorage.setItem('sentEmails', JSON.stringify(Array.from(sentEmails)));
+  }, [sentEmails]);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -108,15 +119,17 @@ export default function AdminDashboard() {
       const searchParams = new URLSearchParams();
       if (searchQuery) searchParams.append('search', searchQuery);
 
-      const [statsRes, ordersRes, customersRes] = await Promise.all([
+      const [statsRes, ordersRes, customersRes, productsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/orders/stats`, { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch(`${API_BASE_URL}/orders?limit=20&${searchParams.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } }), // Increased limit slightly
-        fetch(`${API_BASE_URL}/customers?${searchParams.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${API_BASE_URL}/orders?limit=20&${searchParams.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/customers?${searchParams.toString()}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_BASE_URL}/products`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
       const statsBackend = await statsRes.json();
       const ordersData = await ordersRes.json();
       const customersData = await customersRes.json();
+      const productsData = await productsRes.json();
 
       if (!ordersData.success || !ordersData.data) {
         toast.error(ordersData.message || "Failed to load orders.");
@@ -126,6 +139,7 @@ export default function AdminDashboard() {
       }
 
       setOrders(ordersData.data || []);
+      if (productsData.success) setProducts(productsData.data);
 
       // Process Stats & Customers (Logic from before)
       const totalOrders = statsBackend.data?.totalOrders || 0;
@@ -196,6 +210,12 @@ export default function AdminDashboard() {
       });
       if (response.ok) {
         toast.success("Order status updated!");
+        // Reset email status when order status changes
+        setSentEmails(prev => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
         loadDashboardData();
       } else {
         toast.error("Failed to update status");
@@ -304,6 +324,27 @@ export default function AdminDashboard() {
     setIsAssignDeliveryDialogOpen(true);
   };
 
+  const handleEmailNotify = async (orderId: string) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/notify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSentEmails(prev => new Set(prev).add(orderId));
+        toast.success(data.simulated ? "Email simulation sent! (No credentials)" : "Notification email sent!");
+      } else {
+        toast.error(data.message || "Failed to send notification");
+      }
+    } catch (err) {
+      toast.error("Error sending notification");
+    }
+  };
+
   const handleSaveDeliveryAssignment = async () => {
     if (!assigningOrder) return;
     try {
@@ -325,6 +366,31 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       toast.error("Error assigning delivery boy");
+    }
+  };
+
+  const handleDeassignDelivery = async () => {
+    if (!assigningOrder) return;
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/orders/${assigningOrder._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          deliveryBoy: '',
+          deliveryBoyPhone: ''
+        })
+      });
+
+      if (response.ok) {
+        toast.success("Delivery boy removed!");
+        loadDashboardData();
+        setIsAssignDeliveryDialogOpen(false);
+      } else {
+        toast.error("Failed to remove delivery boy");
+      }
+    } catch (err) {
+      toast.error("Error removing delivery boy");
     }
   };
 
@@ -496,6 +562,7 @@ export default function AdminDashboard() {
         <Overview
           stats={stats}
           revenueData={revenueData}
+          products={products}
           loading={loading}
         />
       )}
@@ -523,6 +590,8 @@ export default function AdminDashboard() {
           handleAssignDeliveryClick={handleAssignDeliveryClick}
           sentMessages={sentMessages}
           handleExportCSV={handleExportCSV}
+          handleEmailNotify={handleEmailNotify}
+          sentEmails={sentEmails}
         />
       )}
 
@@ -635,9 +704,16 @@ export default function AdminDashboard() {
               </Select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignDeliveryDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveDeliveryAssignment}>Assign</Button>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <div>
+              {assigningOrder?.deliveryBoy && (
+                <Button variant="destructive" onClick={handleDeassignDelivery}>Remove Assignment</Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsAssignDeliveryDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveDeliveryAssignment}>Assign</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -10,6 +10,17 @@ import {
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
 
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Trash2, Plus } from "lucide-react";
+
 const API_BASE_URL = '/api';
 
 export default function CustomerProfile() {
@@ -19,6 +30,22 @@ export default function CustomerProfile() {
     const [customer, setCustomer] = useState<any>(null);
     const [orders, setOrders] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState("overview");
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
+    const [newAddress, setNewAddress] = useState({
+        house: "",
+        area: "",
+        landmark: "",
+        pincode: "",
+        label: "Home"
+    });
+
+    useEffect(() => {
+        const savedIdentity = localStorage.getItem('cycle_harmony_user_identity');
+        if (savedIdentity && !isLoggedIn) {
+            handleLogin(savedIdentity);
+        }
+    }, []);
 
     const handleLogin = async (val?: string) => {
         const value = val || phone;
@@ -61,6 +88,99 @@ export default function CustomerProfile() {
             const simulatedEmail = "user@gmail.com";
             handleLogin(simulatedEmail);
         }, 1000);
+    };
+
+    const handleNewAddress = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newAddress.house || !newAddress.area || !newAddress.pincode) {
+            toast.error("Please fill required fields");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/customers/${customer._id}/addresses`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newAddress)
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setCustomer({ ...customer, addresses: data.data });
+                setIsAddAddressOpen(false);
+                setNewAddress({ house: "", area: "", landmark: "", pincode: "", label: "Home" });
+                toast.success("Address added successfully");
+            } else {
+                toast.error(data.message || "Failed to add address");
+            }
+        } catch (error) {
+            toast.error("Network error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteAddress = async (index: number) => {
+        if (!confirm("Are you sure you want to delete this address?")) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/customers/${customer._id}/addresses/${index}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                setCustomer({ ...customer, addresses: data.data });
+                toast.success("Address deleted successfully");
+            } else {
+                toast.error(data.message || "Failed to delete address");
+            }
+        } catch (error) {
+            toast.error("Network error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderTrackingTimeline = (status: string) => {
+        const stages = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
+        const currentIndex = stages.indexOf(status);
+
+        return (
+            <div className="py-8 px-4">
+                <div className="relative flex justify-between items-center max-w-2xl mx-auto">
+                    {/* Connecting Line */}
+                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-100 -translate-y-1/2 -z-10"></div>
+                    <div
+                        className="absolute top-1/2 left-0 h-0.5 bg-pink-500 transition-all duration-1000 -translate-y-1/2 -z-10"
+                        style={{ width: `${Math.max(0, (currentIndex / (stages.length - 1)) * 100)}%` }}
+                    ></div>
+
+                    {stages.map((stage, idx) => {
+                        const isCompleted = idx <= currentIndex;
+                        const isActive = idx === currentIndex;
+                        const Icon = idx === 0 ? Clock : idx === 1 ? CheckCircle : idx === 2 ? Package : idx === 3 ? Truck : CheckCircle;
+
+                        return (
+                            <div key={stage} className="flex flex-col items-center gap-3 relative">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 shadow-sm ${isCompleted ? 'bg-pink-500 text-white' : 'bg-white text-gray-300 border-2 border-gray-100'
+                                    } ${isActive ? 'ring-4 ring-pink-100 scale-110' : ''}`}>
+                                    <Icon className="w-5 h-5" />
+                                </div>
+                                <div className="text-center">
+                                    <p className={`text-[10px] font-bold uppercase tracking-widest ${isCompleted ? 'text-pink-600' : 'text-gray-400'}`}>
+                                        {stage}
+                                    </p>
+                                    {isActive && <Badge className="mt-1 bg-pink-50 text-pink-600 border-none text-[8px] animate-pulse">Current</Badge>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
     };
 
     const getStatusBadge = (status: string) => {
@@ -165,7 +285,7 @@ export default function CustomerProfile() {
                                         return (
                                             <button
                                                 key={item.id}
-                                                onClick={() => setActiveTab(item.id)}
+                                                onClick={() => { setActiveTab(item.id); setSelectedOrder(null); }}
                                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === item.id
                                                     ? "bg-pink-500 text-white shadow-lg shadow-pink-100"
                                                     : "text-gray-500 hover:bg-pink-50 hover:text-pink-600"
@@ -177,7 +297,10 @@ export default function CustomerProfile() {
                                         );
                                     })}
                                     <button
-                                        onClick={() => setIsLoggedIn(false)}
+                                        onClick={() => {
+                                            localStorage.removeItem('cycle_harmony_user_identity');
+                                            setIsLoggedIn(false);
+                                        }}
                                         className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-red-400 hover:bg-red-50 transition-all mt-4"
                                     >
                                         <LogOut className="w-4 h-4" />
@@ -213,7 +336,7 @@ export default function CustomerProfile() {
                                                     </div>
                                                 </div>
                                                 <p className="text-xl font-black text-gray-900">
-                                                    {new Date(customer?.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                                                    {customer?.createdAt ? new Date(customer.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'N/A'}
                                                 </p>
                                                 <p className="text-sm text-gray-500 font-medium">Wellness Journey Started</p>
                                             </CardContent>
@@ -234,7 +357,11 @@ export default function CustomerProfile() {
                                                         <p className="text-4xl font-black mb-1">{orders[0].orderStatus}</p>
                                                         <p className="text-white/80 text-sm">#{orders[0].orderId || orders[0]._id.slice(-6).toUpperCase()} • {orders[0].phase}</p>
                                                     </div>
-                                                    <Button onClick={() => setActiveTab("orders")} variant="secondary" className="bg-white text-pink-600 hover:bg-gray-100">
+                                                    <Button
+                                                        onClick={() => { setSelectedOrder(orders[0]); setActiveTab("orders"); }}
+                                                        variant="secondary"
+                                                        className="bg-white text-pink-600 hover:bg-gray-100"
+                                                    >
                                                         Track Order
                                                     </Button>
                                                 </div>
@@ -258,66 +385,137 @@ export default function CustomerProfile() {
                             {/* Orders Tab */}
                             {activeTab === "orders" && (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Your Order History</h2>
-                                    {orders.length === 0 ? (
-                                        <Card className="border-dashed border-2 py-20 text-center">
-                                            <CardDescription>You haven't placed any orders yet.</CardDescription>
-                                            <Button variant="link" className="text-pink-600" onClick={() => window.location.href = '/shop'}>Start Shopping</Button>
-                                        </Card>
-                                    ) : (
-                                        orders.map((order) => (
-                                            <Card key={order._id} className="border-none shadow-lg bg-white overflow-hidden hover:shadow-xl transition-all">
-                                                <div className="p-6">
-                                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center shrink-0">
-                                                                <Package className="w-6 h-6 text-gray-400" />
-                                                            </div>
-                                                            <div>
-                                                                <p className="font-bold text-gray-900">Order #{order.orderId || order._id.slice(-6).toUpperCase()}</p>
-                                                                <p className="text-xs text-gray-400 flex items-center gap-1">
-                                                                    <Calendar className="w-3 h-3" />
-                                                                    {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="text-right">
-                                                                <p className="text-xl font-black text-gray-900">₹{order.totalPrice}</p>
-                                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.totalQuantity} Items</p>
-                                                            </div>
-                                                            {getStatusBadge(order.orderStatus)}
-                                                        </div>
-                                                    </div>
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-gray-800">
+                                            {selectedOrder ? "Order Tracking" : "Your Order History"}
+                                        </h2>
+                                        {selectedOrder && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedOrder(null)}
+                                                className="text-gray-500 hover:text-pink-600"
+                                            >
+                                                Back to List
+                                            </Button>
+                                        )}
+                                    </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 rounded-2xl p-4 border border-gray-50">
+                                    {selectedOrder ? (
+                                        <div className="space-y-6">
+                                            <Card className="border-none shadow-xl bg-white overflow-hidden">
+                                                <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-8 text-white">
+                                                    <div className="flex justify-between items-start">
                                                         <div>
-                                                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Details</h4>
-                                                            <div className="space-y-1 text-sm">
-                                                                <p className="text-gray-700 font-medium">{order.phase} Healthy Laddus</p>
-                                                                <p className="text-gray-500 text-xs">{order.totalWeight}g • {order.cycleLength} Day Cycle</p>
-                                                                {order.deliveryDate && (
-                                                                    <div className="flex items-center gap-1.5 text-green-600 font-bold mt-1">
-                                                                        <Truck className="w-3 h-3" />
-                                                                        <span className="text-[10px]">Expected: {new Date(order.deliveryDate).toLocaleDateString()}</span>
-                                                                    </div>
-                                                                )}
-                                                                {order.paymentMethod && (
-                                                                    <p className="text-pink-600 text-xs font-bold mt-2">Paid via {order.paymentMethod}</p>
-                                                                )}
-                                                            </div>
+                                                            <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">Tracking Order</p>
+                                                            <h3 className="text-3xl font-black">#{selectedOrder.orderId || selectedOrder._id.slice(-6).toUpperCase()}</h3>
                                                         </div>
-                                                        <div>
-                                                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ship to</h4>
-                                                            <address className="not-italic text-sm text-gray-600 leading-relaxed">
-                                                                {order.address.house}, {order.address.area}<br />
-                                                                {order.address.pincode}
-                                                            </address>
+                                                        <div className="text-right">
+                                                            <Badge className="bg-white/20 text-white border-none py-1 px-3">
+                                                                {selectedOrder.orderStatus}
+                                                            </Badge>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <CardContent className="p-8">
+                                                    {renderTrackingTimeline(selectedOrder.orderStatus)}
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-8 border-t border-gray-100">
+                                                        <div className="space-y-4">
+                                                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Estimated Delivery</h4>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center">
+                                                                    <Truck className="w-6 h-6 text-green-600" />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-gray-900 text-lg">
+                                                                        {selectedOrder.deliveryDate ? new Date(selectedOrder.deliveryDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : "Calculation pending..."}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500">Subject to logistics partners</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-4">
+                                                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Shipping To</h4>
+                                                            <div className="flex items-start gap-3">
+                                                                <div className="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center">
+                                                                    <MapPin className="w-6 h-6 text-pink-600" />
+                                                                </div>
+                                                                <div className="text-sm text-gray-600 leading-relaxed">
+                                                                    <p className="font-bold text-gray-900 uppercase">{selectedOrder.fullName}</p>
+                                                                    <p>{selectedOrder.address.house}, {selectedOrder.address.area}</p>
+                                                                    <p>{selectedOrder.address.pincode}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
                                             </Card>
-                                        ))
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {orders.length === 0 ? (
+                                                <Card className="border-dashed border-2 py-20 text-center">
+                                                    <CardDescription>You haven't placed any orders yet.</CardDescription>
+                                                    <Button variant="link" className="text-pink-600" onClick={() => window.location.href = '/shop'}>Start Shopping</Button>
+                                                </Card>
+                                            ) : (
+                                                orders.map((order) => (
+                                                    <Card key={order._id} className="border-none shadow-lg bg-white overflow-hidden hover:shadow-xl transition-all mb-4">
+                                                        <div className="p-6">
+                                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center shrink-0">
+                                                                        <Package className="w-6 h-6 text-gray-400" />
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="font-bold text-gray-900">Order #{order.orderId || order._id.slice(-6).toUpperCase()}</p>
+                                                                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                                                                            <Calendar className="w-3 h-3" />
+                                                                            {new Date(order.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="text-right">
+                                                                        <p className="text-xl font-black text-gray-900">₹{order.totalPrice}</p>
+                                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{order.totalQuantity} Items</p>
+                                                                    </div>
+                                                                    <Button size="sm" variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" onClick={() => setSelectedOrder(order)}>Details</Button>
+                                                                    {getStatusBadge(order.orderStatus)}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50/50 rounded-2xl p-4 border border-gray-50">
+                                                                <div>
+                                                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Order Details</h4>
+                                                                    <div className="space-y-1 text-sm">
+                                                                        <p className="text-gray-700 font-medium">{order.phase} Healthy Laddus</p>
+                                                                        <p className="text-gray-500 text-xs">{order.totalWeight}g • {order.cycleLength} Day Cycle</p>
+                                                                        {order.deliveryDate && (
+                                                                            <div className="flex items-center gap-1.5 text-green-600 font-bold mt-1">
+                                                                                <Truck className="w-3 h-3" />
+                                                                                <span className="text-[10px]">Expected: {new Date(order.deliveryDate).toLocaleDateString()}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        {order.paymentMethod && (
+                                                                            <p className="text-pink-600 text-xs font-bold mt-2">Paid via {order.paymentMethod}</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ship to</h4>
+                                                                    <address className="not-italic text-sm text-gray-600 leading-relaxed">
+                                                                        {order.address.house}, {order.address.area}<br />
+                                                                        {order.address.pincode}
+                                                                    </address>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </Card>
+                                                ))
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}
@@ -341,14 +539,16 @@ export default function CustomerProfile() {
                                                         <p className="text-sm text-gray-600 leading-relaxed h-10 overflow-hidden line-clamp-2">
                                                             {addr.house}, {addr.area}, {addr.pincode}
                                                         </p>
-                                                        <div className="mt-6 flex justify-end">
+                                                        <div className="mt-6 flex justify-end gap-2">
                                                             <Button size="sm" variant="ghost" className="text-pink-600 font-bold hover:bg-pink-50">Manage</Button>
+                                                            <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteAddress(idx)}>
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
                                                         </div>
                                                     </CardContent>
                                                 </Card>
                                             ))
                                         ) : (
-                                            // Fallback if no explicit addresses are found, use address from last order
                                             orders.length > 0 && orders[0].address && (
                                                 <Card className="border-none shadow-lg bg-white overflow-hidden group">
                                                     <CardContent className="p-6">
@@ -369,12 +569,72 @@ export default function CustomerProfile() {
                                                 </Card>
                                             )
                                         )}
-                                        <Card className="border-dashed border-2 bg-transparent hover:bg-pink-50/20 transition-all cursor-pointer flex flex-col items-center justify-center p-8">
-                                            <div className="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center mb-3 text-pink-400">
-                                                <XCircle className="w-6 h-6 rotate-45" />
-                                            </div>
-                                            <p className="text-sm font-bold text-gray-400">Add New Address</p>
-                                        </Card>
+                                        <Dialog open={isAddAddressOpen} onOpenChange={setIsAddAddressOpen}>
+                                            <DialogTrigger asChild>
+                                                <Card className="border-dashed border-2 bg-transparent hover:bg-pink-50/20 transition-all cursor-pointer flex flex-col items-center justify-center p-8">
+                                                    <div className="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center mb-3 text-pink-400">
+                                                        <Plus className="w-6 h-6" />
+                                                    </div>
+                                                    <p className="text-sm font-bold text-gray-400">Add New Address</p>
+                                                </Card>
+                                            </DialogTrigger>
+                                            <DialogContent className="sm:max-w-[425px]">
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Address</DialogTitle>
+                                                    <DialogDescription>
+                                                        Save a new delivery location to your profile.
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <form onSubmit={handleNewAddress} className="space-y-4 py-4">
+                                                    <div className="grid gap-2">
+                                                        <Label>House / Flat No.</Label>
+                                                        <Input
+                                                            value={newAddress.house}
+                                                            onChange={e => setNewAddress({ ...newAddress, house: e.target.value })}
+                                                            placeholder="Flat 101, Galaxy Apts"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="grid gap-2">
+                                                        <Label>Area / Street</Label>
+                                                        <Input
+                                                            value={newAddress.area}
+                                                            onChange={e => setNewAddress({ ...newAddress, area: e.target.value })}
+                                                            placeholder="Green Park, Church Road"
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div className="grid gap-2">
+                                                            <Label>Pincode</Label>
+                                                            <Input
+                                                                value={newAddress.pincode}
+                                                                onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                                                                placeholder="500001"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div className="grid gap-2">
+                                                            <Label>Address Type</Label>
+                                                            <select
+                                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                value={newAddress.label}
+                                                                onChange={e => setNewAddress({ ...newAddress, label: e.target.value })}
+                                                            >
+                                                                <option>Home</option>
+                                                                <option>Work</option>
+                                                                <option>Other</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <DialogFooter>
+                                                        <Button type="submit" className="bg-pink-500 hover:bg-pink-600 text-white w-full h-12" disabled={loading}>
+                                                            {loading ? "Saving..." : "Save Address"}
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
                                 </div>
                             )}
@@ -414,7 +674,6 @@ export default function CustomerProfile() {
     );
 }
 
-// Sub-components as needed
 function Label({ children, className }: { children: React.ReactNode, className?: string }) {
     return <p className={`text-xs font-bold uppercase tracking-widest ${className}`}>{children}</p>;
 }

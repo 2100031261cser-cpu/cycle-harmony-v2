@@ -27,7 +27,8 @@ const products = [
         rating: 4.8,
         reviews: 156,
         badge: "Best Seller",
-        badgeColor: "bg-green-500"
+        badgeColor: "bg-green-500",
+        quantity: 15
     },
     {
         id: 2,
@@ -47,7 +48,8 @@ const products = [
         rating: 4.9,
         reviews: 143,
         badge: "Popular",
-        badgeColor: "bg-pink-500"
+        badgeColor: "bg-pink-500",
+        quantity: 15
     }
 ];
 
@@ -138,6 +140,9 @@ export default function ShopNow() {
                                                         {product.days}
                                                     </span>
                                                 </div>
+                                                <p className="text-sm font-bold text-wellness-green mt-2">
+                                                    Quantity: {product.quantity} Laddus
+                                                </p>
                                             </CardHeader>
 
                                             <CardContent className="space-y-8 relative z-20 px-8 pb-8">
@@ -210,57 +215,6 @@ export default function ShopNow() {
                 </FadeIn>
             </FadeIn>
 
-            {/* Combo Offer Section */}
-            <FadeIn>
-                <section className="py-24 px-4 bg-gradient-to-b from-transparent to-pink-50/50">
-                    <div className="container mx-auto max-w-5xl">
-                        <Card className="bg-white/80 backdrop-blur-xl shadow-[0_40px_80px_rgba(0,0,0,0.1)] border border-white/60 overflow-hidden rounded-[2.5rem]">
-                            <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 py-3 text-center relative overflow-hidden">
-                                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay"></div>
-                                <span className="text-white font-bold text-sm tracking-[0.2em] relative z-10 flex items-center justify-center gap-2">
-                                    <Star className="h-4 w-4 fill-white text-white" />
-                                    LIMITED TIME COMBO OFFER
-                                    <Star className="h-4 w-4 fill-white text-white" />
-                                </span>
-                            </div>
-                            <CardContent className="p-12 text-center relative">
-                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-pink-50/50 to-transparent pointer-events-none"></div>
-                                <h3 className="text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-6 relative z-10">
-                                    Complete Cycle Care
-                                </h3>
-                                <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed relative z-10">
-                                    Get both Phase I & Phase II Laddus for full hormanal balance. <br />
-                                    <span className="font-medium text-pink-600">Save 25% when you buy the bundle!</span>
-                                </p>
-
-                                <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-10 relative z-10">
-                                    <div className="text-right hidden md:block">
-                                        <p className="text-sm text-gray-500 uppercase tracking-widest font-semibold">Total Value</p>
-                                        <p className="text-2xl text-gray-400 line-through decoration-gray-300">₹1198</p>
-                                    </div>
-                                    <div className="bg-gray-900 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 transform hover:scale-105 transition-transform">
-                                        <span className="text-5xl font-bold tracking-tight">₹899</span>
-                                    </div>
-                                    <div className="text-left hidden md:block">
-                                        <p className="text-sm text-green-600 uppercase tracking-widest font-bold">You Save</p>
-                                        <p className="text-2xl text-green-600 font-bold">₹299</p>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    onClick={() => handleAddToCart("Combo")}
-                                    className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white px-12 py-8 text-xl font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <ShoppingCart className="h-6 w-6 group-hover:animate-bounce" />
-                                        Add Bundle to Cart
-                                    </span>
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </section>
-            </FadeIn>
 
             {/* Cycle Companion (Order Form) */}
             <FadeIn>

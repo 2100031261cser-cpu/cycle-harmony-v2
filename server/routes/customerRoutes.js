@@ -2,6 +2,7 @@ import express from 'express';
 import Customer from '../models/Customer.js';
 import Order from '../models/Order.js';
 import { generateCustomerId } from '../utils/idGenerator.js';
+import { sendTelegramMessage } from '../utils/telegram.js';
 
 const router = express.Router();
 
@@ -94,6 +95,21 @@ router.post('/customers', async (req, res) => {
                 addresses: []
             });
             await customer.save();
+
+            // Notify Telegram about new customer
+            try {
+                const telegramMsg = `
+🆕 *New Customer Registered!*
+----------------------------
+*Name:* ${name}
+*Phone:* ${phone}
+*Age:* ${age}
+*Customer ID:* ${newCustomerId}
+                `;
+                await sendTelegramMessage(telegramMsg.trim());
+            } catch (err) {
+                console.error('Telegram notification error:', err);
+            }
         }
 
         res.status(200).json({
@@ -231,6 +247,66 @@ router.delete('/customers/:id', async (req, res) => {
         });
     } catch (error) {
         console.error('Error deleting customer:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Add a new address to customer
+router.post('/customers/:id/addresses', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { house, area, pincode, label, landmark } = req.body;
+
+        if (!house || !area || !pincode) {
+            return res.status(400).json({ success: false, message: 'House, Area, and Pincode are required' });
+        }
+
+        const customer = await Customer.findById(id);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        // Deduplication check
+        const isDuplicate = customer.addresses.some(addr =>
+            addr.house.trim().toLowerCase() === house.trim().toLowerCase() &&
+            addr.area.trim().toLowerCase() === area.trim().toLowerCase() &&
+            addr.pincode.trim().toLowerCase() === pincode.trim().toLowerCase()
+        );
+
+        if (isDuplicate) {
+            return res.status(400).json({ success: false, message: 'This address already exists' });
+        }
+
+        customer.addresses.push({ house, area, pincode, label: label || 'Home', landmark: landmark || '' });
+        await customer.save();
+
+        res.status(200).json({ success: true, message: 'Address added successfully', data: customer.addresses });
+    } catch (error) {
+        console.error('Error adding address:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Delete an address from customer
+router.delete('/customers/:id/addresses/:index', async (req, res) => {
+    try {
+        const { id, index } = req.params;
+
+        const customer = await Customer.findById(id);
+        if (!customer) {
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        }
+
+        if (index < 0 || index >= customer.addresses.length) {
+            return res.status(400).json({ success: false, message: 'Invalid address index' });
+        }
+
+        customer.addresses.splice(index, 1);
+        await customer.save();
+
+        res.status(200).json({ success: true, message: 'Address deleted successfully', data: customer.addresses });
+    } catch (error) {
+        console.error('Error deleting address:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });

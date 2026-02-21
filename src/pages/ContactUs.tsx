@@ -52,7 +52,7 @@ const ContactUs = () => {
       const body = encodeURIComponent(
         `Name: ${formData.name}\nPhone: ${formData.phone}\n\nMessage:\n${formData.message}`
       );
-      const mailtoLink = `mailto:support@nhcservice.in?subject=${subject}&body=${body}`;
+      const mailtoLink = `mailto:nhccycleharmony@gmail.com?subject=${subject}&body=${body}`;
 
       // Show success message
       toast.success("Message sent successfully!", {
@@ -76,7 +76,7 @@ const ContactUs = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-16 md:py-24 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
@@ -87,7 +87,7 @@ const ContactUs = () => {
             Contact Us
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We'd love to hear from you! Get in touch with us for any questions, 
+            We'd love to hear from you! Get in touch with us for any questions,
             concerns, or feedback about our wellness products.
           </p>
         </div>
@@ -101,7 +101,7 @@ const ContactUs = () => {
                 Get in Touch
               </h2>
               <p className="text-gray-700 leading-relaxed mb-6">
-                Reach out to us through any of the following channels. Our friendly 
+                Reach out to us through any of the following channels. Our friendly
                 customer support team is here to help you with any questions or concerns.
               </p>
 
@@ -124,11 +124,11 @@ const ContactUs = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Email</p>
-                    <a 
-                      href="mailto:support@nhcservice.in" 
+                    <a
+                      href="mailto:nhccycleharmony@gmail.com"
                       className="text-green-600 hover:text-green-700 hover:underline text-lg font-medium"
                     >
-                      support@nhcservice.in
+                      nhccycleharmony@gmail.com
                     </a>
                   </div>
                 </div>
@@ -140,11 +140,11 @@ const ContactUs = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm uppercase tracking-wide">Phone</p>
-                    <a 
-                      href="tel:+917660922416" 
+                    <a
+                      href="tel:+919347122416"
                       className="text-green-600 hover:text-green-700 hover:underline text-lg font-medium"
                     >
-                      +917660922416
+                      +91 93471 22416
                     </a>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ const ContactUs = () => {
                 Quick Response
               </h3>
               <p className="text-sm text-gray-700">
-                For urgent inquiries, please call us directly or send a WhatsApp message. 
+                For urgent inquiries, please call us directly or send a WhatsApp message.
                 We're committed to providing you with the best customer service experience.
               </p>
             </div>

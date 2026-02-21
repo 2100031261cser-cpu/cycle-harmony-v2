@@ -196,6 +196,33 @@ export function Customers({ customers, orders, handleEditCustomerClick, handleDe
                                 </Card>
                             )}
 
+                            {/* Cycle Information */}
+                            {(selectedCustomer.lastPeriodDate || selectedCustomer.averageCycleLength) && (
+                                <Card className="border-pink-100 bg-pink-50/30">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-sm font-bold text-pink-500 uppercase flex items-center gap-2">
+                                            <Calendar className="w-4 h-4" /> Cycle Information
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-white p-3 rounded-xl border border-pink-100 shadow-sm">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Last Period Start</p>
+                                                <p className="text-sm font-bold text-gray-900">
+                                                    {selectedCustomer.lastPeriodDate ? new Date(selectedCustomer.lastPeriodDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div className="bg-white p-3 rounded-xl border border-pink-100 shadow-sm">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Cycle Length</p>
+                                                <p className="text-sm font-bold text-gray-900">
+                                                    {selectedCustomer.averageCycleLength ? `${selectedCustomer.averageCycleLength} Days` : 'N/A'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
                             {/* Order History Timeline */}
                             <div>
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">

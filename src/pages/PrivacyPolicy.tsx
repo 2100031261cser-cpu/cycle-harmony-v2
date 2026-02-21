@@ -205,8 +205,8 @@ export default function PrivacyPolicy() {
                                     <Mail className="w-5 h-5 text-wellness-green" />
                                     <div>
                                         <p className="font-semibold text-gray-800">Email</p>
-                                        <a href="mailto:support@nhcservice.in" className="text-wellness-green hover:underline">
-                                            support@nhcservice.in
+                                        <a href="mailto:nhccycleharmony@gmail.com" className="text-wellness-green hover:underline">
+                                            nhccycleharmony@gmail.com
                                         </a>
                                     </div>
                                 </div>

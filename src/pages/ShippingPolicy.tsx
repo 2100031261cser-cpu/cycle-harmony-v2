@@ -57,7 +57,7 @@ export default function ShippingPolicy() {
                                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                                     <h3 className="font-semibold text-lg text-gray-800 mb-2">Delivery Time</h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        Delivery usually takes <strong>2–5 business days</strong> within Hyderabad, depending on your location.
+                                        Delivery usually takes <strong>1–2 business days</strong> within Hyderabad, depending on your location.
                                     </p>
                                 </div>
                                 <div className="bg-wellness-green/10 border border-wellness-green/30 rounded-xl p-6">
@@ -75,15 +75,9 @@ export default function ShippingPolicy() {
                                 <Gift className="w-6 h-6 text-wellness-pink" />
                                 Free Shipping
                             </h2>
-                            <div className="bg-gradient-to-br from-wellness-green/20 to-wellness-pink/20 p-8 rounded-2xl border-2 border-wellness-green/30">
+                            <div className="bg-gradient-to-br from-wellness-green/10 to-wellness-pink/10 p-8 rounded-2xl shadow-sm">
                                 <div className="text-center">
                                     <p className="text-3xl font-bold text-wellness-green mb-2">🎉 Free Shipping!</p>
-                                    <p className="text-xl text-gray-800 mb-4">
-                                        On orders above <strong className="text-wellness-pink text-2xl">₹999</strong>
-                                    </p>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        For orders below this amount, a nominal delivery charge may apply.
-                                    </p>
                                 </div>
                             </div>
                         </section>
@@ -100,8 +94,8 @@ export default function ShippingPolicy() {
                                 <Mail className="w-5 h-5 text-wellness-green" />
                                 <div>
                                     <p className="font-semibold text-gray-800">Email:</p>
-                                    <a href="mailto:support@nhcservice.in" className="text-wellness-green hover:underline">
-                                        support@nhcservice.in
+                                    <a href="mailto:nhccycleharmony@gmail.com" className="text-wellness-green hover:underline">
+                                        nhccycleharmony@gmail.com
                                     </a>
                                 </div>
                             </div>

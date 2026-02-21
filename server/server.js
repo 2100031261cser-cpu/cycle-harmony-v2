@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 import connectDB from './config/database.js';
 import orderRoutes from './routes/orderRoutes.js';
 import customerRoutes from './routes/customerRoutes.js';
+import { startTelegramListener } from './utils/telegramListener.js';
 
 // Load environment variables
 dotenv.config();
@@ -85,9 +86,12 @@ app.use((req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`🌐 API available at http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
+
+  // Start Telegram AI Agent Listener
+  startTelegramListener();
 });
 

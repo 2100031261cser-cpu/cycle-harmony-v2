@@ -26,6 +26,8 @@ interface OrdersProps {
     handleAssignDeliveryClick: (order: any) => void;
     sentMessages: Set<string>;
     handleExportCSV: () => void;
+    handleEmailNotify: (id: string) => void;
+    sentEmails: Set<string>;
 }
 
 const statusOptions = [
@@ -41,7 +43,7 @@ const statusOptions = [
 export function Orders({
     orders, orderFilter, setOrderFilter, searchQuery, setSearchQuery, handleStatusUpdate,
     handleDeleteClick, handleEditClick, handleWhatsAppSend, handleAssignDeliveryClick,
-    sentMessages, handleExportCSV
+    sentMessages, handleExportCSV, handleEmailNotify, sentEmails
 }: OrdersProps) {
 
     const [paymentFilter, setPaymentFilter] = useState("all");
@@ -187,6 +189,22 @@ export function Orders({
                                         <div className="flex items-center justify-between md:justify-start gap-4">
                                             <StatusBadge status={order.orderStatus} />
                                             <span className="text-xs text-gray-400 font-mono">#{order.orderId || (order._id ? order._id.toString().slice(-6).toUpperCase() : 'N/A')}</span>
+                                            {/* Email Notify Button */}
+                                            {order.email && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleEmailNotify(order._id)}
+                                                    className={`h-9 w-9 p-0 shadow-sm transition-all ${sentEmails.has(order._id)
+                                                            ? "border-green-200 bg-green-50 text-green-600 hover:bg-green-100"
+                                                            : "border-pink-200 text-pink-500 hover:bg-pink-50 hover:text-pink-600"
+                                                        }`}
+                                                    title={sentEmails.has(order._id) ? "Email Sent (Click to resend)" : "Send Email Notification"}
+                                                >
+                                                    <MessageSquare className="w-4 h-4" />
+                                                </Button>
+                                            )}
+
                                             {/* Delivery Boy Badge */}
                                             {order.deliveryBoy && (
                                                 <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 flex items-center gap-1">

@@ -14,6 +14,27 @@ export default function Checkout() {
     const navigate = useNavigate();
     const orderData = location.state?.orderData;
 
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [confirmedOrder, setConfirmedOrder] = useState<any>(null);
+
+    useEffect(() => {
+        if (!orderData) {
+            toast.error("No order found. Redirecting to home.");
+            navigate("/");
+            return;
+        }
+
+        // Load Razorpay Script
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, [orderData, navigate]);
+
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
@@ -34,24 +55,6 @@ export default function Checkout() {
     const [paymentMethod, setPaymentMethod] = useState<"COD" | "Razorpay">("COD");
 
     const [existingCustomer, setExistingCustomer] = useState(null);
-
-    useEffect(() => {
-        if (!orderData) {
-            toast.error("No order found. Redirecting to home.");
-            navigate("/");
-            return;
-        }
-
-        // Load Razorpay Script
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.async = true;
-        document.body.appendChild(script);
-
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, [orderData, navigate]);
 
     const handleStandardLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -209,8 +212,10 @@ export default function Checkout() {
 
             const data = await response.json();
             if (data.success) {
-                toast.success("Order Placed Successfully!");
-                navigate("/profile");
+                // Persist identity for seamless redirect to profile
+                localStorage.setItem('cycle_harmony_user_identity', phone || email);
+                setConfirmedOrder(data.data);
+                setShowSuccess(true);
             } else {
                 toast.error(data.message || "Order Failed");
             }
@@ -235,6 +240,69 @@ export default function Checkout() {
         }
     };
 
+    const renderSuccessScreen = () => {
+        return (
+            <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500">
+                <div className="relative mb-8">
+                    <div className="absolute inset-0 bg-pink-200 rounded-full animate-ping opacity-20 scale-150"></div>
+                    <div className="relative w-24 h-24 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl shadow-pink-200 animate-in slide-in-from-bottom-8 duration-700">
+                        <CheckCircle className="w-12 h-12 text-white stroke-[3px]" />
+                    </div>
+                </div>
+
+                <h2 className="text-4xl font-black text-gray-900 mb-2 text-center">Order Confirmed!</h2>
+                <p className="text-gray-500 font-medium mb-8 text-center max-w-sm">
+                    Thank you for choosing Cycle Harmony. Your wellness journey continues!
+                </p>
+
+                <Card className="w-full border-none shadow-2xl bg-white overflow-hidden mb-8">
+                    <div className="bg-gray-50/50 p-6 border-b border-gray-100">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID</p>
+                                <p className="font-bold text-lg text-gray-900">#{confirmedOrder?.orderId || 'N/A'}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Amount Paid</p>
+                                <p className="font-bold text-lg text-pink-600">₹{confirmedOrder?.totalPrice}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="w-8 h-8 bg-pink-50 rounded-lg flex items-center justify-center text-pink-500">
+                                <Smartphone className="w-4 h-4" />
+                            </div>
+                            <p>Notification sent to <span className="font-bold">{phone}</span></p>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center text-purple-500">
+                                <MapPin className="w-4 h-4" />
+                            </div>
+                            <p className="line-clamp-1">{address.house}, {address.area}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="flex flex-col w-full gap-4">
+                    <Button
+                        onClick={() => navigate("/profile")}
+                        className="h-14 bg-gray-900 hover:bg-black text-white text-lg font-bold rounded-2xl shadow-xl transition-all hover:scale-[1.02]"
+                    >
+                        Track My Order
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate("/")}
+                        className="h-14 text-pink-600 font-bold hover:bg-pink-50 rounded-2xl"
+                    >
+                        Continue Shopping
+                    </Button>
+                </div>
+            </div>
+        );
+    };
+
     if (!orderData) return null;
 
     return (
@@ -242,242 +310,246 @@ export default function Checkout() {
             <Navbar />
 
             <div className="container mx-auto px-4 py-8 pt-24 max-w-2xl">
-                {/* Step Indicator */}
-                <div className="flex justify-between mb-8 px-4 relative">
-                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10 -translate-y-1/2"></div>
-                    {[1, 2, 3].map((s) => (
-                        <div
-                            key={s}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all border-2 ${step >= s ? "bg-pink-500 text-white border-pink-500 scale-110" : "bg-white text-gray-400 border-gray-200"
-                                }`}
-                        >
-                            {step > s ? <CheckCircle className="w-6 h-6" /> : s}
-                        </div>
-                    ))}
-                </div>
-
-                {/* Step 1: Login */}
-                {step === 1 && (
-                    <Card className="shadow-xl border-t-4 border-pink-400">
-                        <CardHeader className="text-center">
-                            <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Mail className="w-8 h-8 text-pink-500" />
-                            </div>
-                            <CardTitle className="text-2xl font-bold">Sign In to Continue</CardTitle>
-                            <CardDescription>Login with your Google account to track your orders</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6 pt-4">
-                            <form onSubmit={handleStandardLogin} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="your@email.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="password">Password</Label>
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                </div>
-                                <Button
-                                    type="submit"
-                                    className="w-full bg-pink-500 hover:bg-pink-600 text-white h-12"
-                                    disabled={loading}
+                {showSuccess ? renderSuccessScreen() : (
+                    <>
+                        {/* Step Indicator */}
+                        <div className="flex justify-between mb-8 px-4 relative">
+                            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -z-10 -translate-y-1/2"></div>
+                            {[1, 2, 3].map((s) => (
+                                <div
+                                    key={s}
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all border-2 ${step >= s ? "bg-pink-500 text-white border-pink-500 scale-110" : "bg-white text-gray-400 border-gray-200"
+                                        }`}
                                 >
-                                    {loading ? "Verifying..." : "Sign In to Order"}
-                                </Button>
-                            </form>
-
-                            <div className="flex items-center gap-2 text-gray-400 text-sm">
-                                <div className="flex-1 h-px bg-gray-200"></div>
-                                <span>OR</span>
-                                <div className="flex-1 h-px bg-gray-200"></div>
-                            </div>
-
-                            <Button
-                                onClick={handleGoogleLogin}
-                                className="w-full h-12 text-md bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-pink-200 gap-3 shadow-sm"
-                                disabled={loading}
-                                type="button"
-                            >
-                                <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="G" />
-                                {loading ? "Connecting..." : "Continue with Google (Gmail)"}
-                            </Button>
-
-                            <div className="space-y-2 text-center text-xs text-gray-500">
-                                Data security is our priority. Your cycle data is encrypted.
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Step 2: Personal Details */}
-                {step === 2 && (
-                    <Card className="shadow-xl border-t-4 border-pink-400">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="w-5 h-5 text-pink-500" />
-                                Personal Details
-                            </CardTitle>
-                            <CardDescription>We need these to process your delivery</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label>Full Name</Label>
-                                <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="grid gap-2">
-                                    <Label>Phone Number</Label>
-                                    <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="10 digit mobile" />
+                                    {step > s ? <CheckCircle className="w-6 h-6" /> : s}
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label>Age</Label>
-                                    <Input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="00" />
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex justify-between">
-                            <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="mr-2" /> Back</Button>
-                            <Button onClick={() => setStep(3)} className="bg-pink-500 hover:bg-pink-600">Next <ArrowRight className="ml-2" /></Button>
-                        </CardFooter>
-                    </Card>
-                )}
+                            ))}
+                        </div>
 
-                {/* Step 3: Address & Payment */}
-                {step === 3 && (
-                    <Card className="shadow-xl border-t-4 border-pink-400">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <MapPin className="w-5 h-5 text-pink-500" />
-                                Delivery Information
-                            </CardTitle>
-                            {existingCustomer && (
-                                <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm mt-2 flex items-center gap-2">
-                                    <span className="animate-pulse">✨</span> Welcome back! We found your details.
-                                </div>
-                            )}
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                <h4 className="font-semibold text-gray-700 text-sm">Address Details</h4>
-                                <div className="grid gap-4">
-                                    <div className="grid gap-2">
-                                        <Label className="text-xs text-gray-500 uppercase">House / Flat No.</Label>
-                                        <Input value={address.house} onChange={e => setAddress({ ...address, house: e.target.value })} />
+                        {/* Step 1: Login */}
+                        {step === 1 && (
+                            <Card className="shadow-xl border-t-4 border-pink-400 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <CardHeader className="text-center">
+                                    <div className="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Mail className="w-8 h-8 text-pink-500" />
                                     </div>
+                                    <CardTitle className="text-2xl font-bold">Sign In to Continue</CardTitle>
+                                    <CardDescription>Login with your Google account to track your orders</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-6 pt-4">
+                                    <form onSubmit={handleStandardLogin} className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                placeholder="your@email.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="password">Password</Label>
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                placeholder="••••••••"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                        <Button
+                                            type="submit"
+                                            className="w-full bg-pink-500 hover:bg-pink-600 text-white h-12"
+                                            disabled={loading}
+                                        >
+                                            {loading ? "Verifying..." : "Sign In to Order"}
+                                        </Button>
+                                    </form>
+
+                                    <div className="flex items-center gap-2 text-gray-400 text-sm">
+                                        <div className="flex-1 h-px bg-gray-200"></div>
+                                        <span>OR</span>
+                                        <div className="flex-1 h-px bg-gray-200"></div>
+                                    </div>
+
+                                    <Button
+                                        onClick={handleGoogleLogin}
+                                        className="w-full h-12 text-md bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-pink-200 gap-3 shadow-sm"
+                                        disabled={loading}
+                                        type="button"
+                                    >
+                                        <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="G" />
+                                        {loading ? "Connecting..." : "Continue with Google (Gmail)"}
+                                    </Button>
+
+                                    <div className="space-y-2 text-center text-xs text-gray-500">
+                                        Data security is our priority. Your cycle data is encrypted.
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Step 2: Personal Details */}
+                        {step === 2 && (
+                            <Card className="shadow-xl border-t-4 border-pink-400 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <User className="w-5 h-5 text-pink-500" />
+                                        Personal Details
+                                    </CardTitle>
+                                    <CardDescription>We need these to process your delivery</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
                                     <div className="grid gap-2">
-                                        <Label className="text-xs text-gray-500 uppercase">Area / Street</Label>
-                                        <Input value={address.area} onChange={e => setAddress({ ...address, area: e.target.value })} />
+                                        <Label>Full Name</Label>
+                                        <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <Label className="text-xs text-gray-500 uppercase">Pincode</Label>
-                                            <Input value={address.pincode} onChange={e => setAddress({ ...address, pincode: e.target.value })} />
+                                            <Label>Phone Number</Label>
+                                            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="10 digit mobile" />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label className="text-xs text-gray-500 uppercase">Type</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                value={address.label}
-                                                onChange={e => setAddress({ ...address, label: e.target.value })}
+                                            <Label>Age</Label>
+                                            <Input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="00" />
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex justify-between">
+                                    <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="mr-2" /> Back</Button>
+                                    <Button onClick={() => setStep(3)} className="bg-pink-500 hover:bg-pink-600">Next <ArrowRight className="ml-2" /></Button>
+                                </CardFooter>
+                            </Card>
+                        )}
+
+                        {/* Step 3: Address & Payment */}
+                        {step === 3 && (
+                            <Card className="shadow-xl border-t-4 border-pink-400 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <MapPin className="w-5 h-5 text-pink-500" />
+                                        Delivery Information
+                                    </CardTitle>
+                                    {existingCustomer && (
+                                        <div className="bg-blue-50 text-blue-700 p-3 rounded-lg text-sm mt-2 flex items-center gap-2">
+                                            <span className="animate-pulse">✨</span> Welcome back! We found your details.
+                                        </div>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    <div className="grid gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                        <h4 className="font-semibold text-gray-700 text-sm">Address Details</h4>
+                                        <div className="grid gap-4">
+                                            <div className="grid gap-2">
+                                                <Label className="text-xs text-gray-500 uppercase">House / Flat No.</Label>
+                                                <Input value={address.house} onChange={e => setAddress({ ...address, house: e.target.value })} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label className="text-xs text-gray-500 uppercase">Area / Street</Label>
+                                                <Input value={address.area} onChange={e => setAddress({ ...address, area: e.target.value })} />
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid gap-2">
+                                                    <Label className="text-xs text-gray-500 uppercase">Pincode</Label>
+                                                    <Input value={address.pincode} onChange={e => setAddress({ ...address, pincode: e.target.value })} />
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label className="text-xs text-gray-500 uppercase">Type</Label>
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        value={address.label}
+                                                        onChange={e => setAddress({ ...address, label: e.target.value })}
+                                                    >
+                                                        <option>Home</option>
+                                                        <option>Work</option>
+                                                        <option>Other</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
+                                            <Smartphone className="w-4 h-4" /> Payment Method
+                                        </h4>
+                                        <div className="grid gap-3">
+                                            <div
+                                                onClick={() => setPaymentMethod("COD")}
+                                                className={`p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === "COD" ? "border-pink-500 bg-pink-50/50" : "border-gray-100 hover:border-pink-200"
+                                                    }`}
                                             >
-                                                <option>Home</option>
-                                                <option>Work</option>
-                                                <option>Other</option>
-                                            </select>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-gray-600 font-bold">₹</span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium">Cash on Delivery</p>
+                                                        <p className="text-xs text-gray-500">Pay when you receive</p>
+                                                    </div>
+                                                </div>
+                                                {paymentMethod === "COD" && (
+                                                    <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                                                        <CheckCircle className="w-4 h-4 text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div
+                                                onClick={() => setPaymentMethod("Razorpay")}
+                                                className={`p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === "Razorpay" ? "border-pink-500 bg-pink-50/50" : "border-gray-100 hover:border-pink-200"
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
+                                                        <img src="https://razorpay.com/favicon.png" className="w-5 h-5" alt="R" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium">Online Payment</p>
+                                                        <p className="text-xs text-gray-500">UPI, Cards, Netbanking (via Razorpay)</p>
+                                                    </div>
+                                                </div>
+                                                {paymentMethod === "Razorpay" && (
+                                                    <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                                                        <CheckCircle className="w-4 h-4 text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div className="space-y-3">
-                                <h4 className="font-semibold text-gray-700 text-sm flex items-center gap-2">
-                                    <Smartphone className="w-4 h-4" /> Payment Method
-                                </h4>
-                                <div className="grid gap-3">
-                                    <div
-                                        onClick={() => setPaymentMethod("COD")}
-                                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === "COD" ? "border-pink-500 bg-pink-50/50" : "border-gray-100 hover:border-pink-200"
-                                            }`}
+                                    <div className="p-4 bg-gray-900 text-white rounded-xl shadow-inner">
+                                        <div className="flex justify-between text-sm opacity-80 mb-2">
+                                            <span>Order Total:</span>
+                                            <span>₹{orderData.totalPrice}</span>
+                                        </div>
+                                        <div className="flex justify-between font-bold text-lg">
+                                            <span>Payable Amount:</span>
+                                            <span className="text-pink-400">₹{orderData.totalPrice}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                                <CardFooter className="flex flex-col gap-3">
+                                    <Button
+                                        onClick={handleFinishOrder}
+                                        className="w-full h-14 text-lg bg-pink-500 hover:bg-pink-600 shadow-lg shadow-pink-200"
+                                        disabled={loading}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                                                <span className="text-gray-600 font-bold">₹</span>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">Cash on Delivery</p>
-                                                <p className="text-xs text-gray-500">Pay when you receive</p>
-                                            </div>
-                                        </div>
-                                        {paymentMethod === "COD" && (
-                                            <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
-                                                <CheckCircle className="w-4 h-4 text-white" />
-                                            </div>
-                                        )}
-                                    </div>
+                                        {loading ? "Processing..." : "Finish Order and Deliver 🚚"}
+                                    </Button>
+                                    <Button variant="ghost" onClick={() => setStep(2)}><ArrowLeft className="mr-2" /> Previous Step</Button>
+                                </CardFooter>
+                            </Card>
+                        )}
 
-                                    <div
-                                        onClick={() => setPaymentMethod("Razorpay")}
-                                        className={`p-4 border-2 rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === "Razorpay" ? "border-pink-500 bg-pink-50/50" : "border-gray-100 hover:border-pink-200"
-                                            }`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
-                                                <img src="https://razorpay.com/favicon.png" className="w-5 h-5" alt="R" />
-                                            </div>
-                                            <div>
-                                                <p className="font-medium">Online Payment</p>
-                                                <p className="text-xs text-gray-500">UPI, Cards, Netbanking (via Razorpay)</p>
-                                            </div>
-                                        </div>
-                                        {paymentMethod === "Razorpay" && (
-                                            <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
-                                                <CheckCircle className="w-4 h-4 text-white" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-4 bg-gray-900 text-white rounded-xl shadow-inner">
-                                <div className="flex justify-between text-sm opacity-80 mb-2">
-                                    <span>Order Total:</span>
-                                    <span>₹{orderData.totalPrice}</span>
-                                </div>
-                                <div className="flex justify-between font-bold text-lg">
-                                    <span>Payable Amount:</span>
-                                    <span className="text-pink-400">₹{orderData.totalPrice}</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex flex-col gap-3">
-                            <Button
-                                onClick={handleFinishOrder}
-                                className="w-full h-14 text-lg bg-pink-500 hover:bg-pink-600 shadow-lg shadow-pink-200"
-                                disabled={loading}
-                            >
-                                {loading ? "Processing..." : "Finish Order and Deliver 🚚"}
-                            </Button>
-                            <Button variant="ghost" onClick={() => setStep(2)}><ArrowLeft className="mr-2" /> Previous Step</Button>
-                        </CardFooter>
-                    </Card>
+                        <p className="text-center text-xs text-gray-400 mt-8">
+                            By continuing, you agree to our Terms & Privacy Policy.
+                        </p>
+                    </>
                 )}
-
-                <p className="text-center text-xs text-gray-400 mt-8">
-                    By continuing, you agree to our Terms & Privacy Policy.
-                </p>
             </div>
         </div>
     );

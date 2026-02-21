@@ -51,8 +51,11 @@ export function CTASection() {
           <h3 className="font-heading text-2xl font-bold text-foreground mb-3">
             Phase I Laddu
           </h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-2">
             Flaxseeds & pumpkin seeds for follicular phase (Days 1-14)
+          </p>
+          <p className="text-wellness-pink font-bold mb-4">
+            Quantity: 15
           </p>
           <div className="text-3xl font-bold text-wellness-green mb-6">₹390</div>
           <Button variant="wellness" size="lg" onClick={scrollToChecker}>
@@ -70,8 +73,11 @@ export function CTASection() {
           <h3 className="font-heading text-2xl font-bold text-foreground mb-3">
             Phase II Laddu
           </h3>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-2">
             Sesame & sunflower seeds for luteal phase (Days 15-28)
+          </p>
+          <p className="text-wellness-pink font-bold mb-4">
+            Quantity: 15
           </p>
           <div className="text-3xl font-bold text-wellness-green mb-6">₹390</div>
           <Button variant="wellness" size="lg" onClick={scrollToChecker}>

@@ -118,7 +118,7 @@ export default function RefundPolicy() {
                                     <div className="flex-shrink-0 w-8 h-8 bg-wellness-green text-white rounded-full flex items-center justify-center font-bold">1</div>
                                     <div>
                                         <h3 className="font-semibold text-gray-800 mb-1">Contact us immediately</h3>
-                                        <p className="text-gray-700 leading-relaxed">Reach out to us via email at <a href="mailto:support@nhcservice.in" className="text-wellness-green hover:underline">support@nhcservice.in</a> or phone within 48 hours of delivery. Include your order number and a description of the issue.</p>
+                                        <p className="text-gray-700 leading-relaxed">Reach out to us via email at <a href="mailto:nhccycleharmony@gmail.com" className="text-wellness-green hover:underline">nhccycleharmony@gmail.com</a> or phone within 48 hours of delivery. Include your order number and a description of the issue.</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-4">
@@ -245,7 +245,7 @@ export default function RefundPolicy() {
                                     Contact us via WhatsApp with your order details
                                 </li>
                                 <li className="text-gray-700 leading-relaxed">
-                                    Or email us at <a href="mailto:support@nhcservice.in" className="text-wellness-green hover:underline">support@nhcservice.in</a> with your order information
+                                    Or email us at <a href="mailto:nhccycleharmony@gmail.com" className="text-wellness-green hover:underline">nhccycleharmony@gmail.com</a> with your order information
                                 </li>
                                 <li className="text-gray-700 leading-relaxed">
                                     Follow the same refund process and timeline as website orders
@@ -266,8 +266,8 @@ export default function RefundPolicy() {
                                     <Mail className="w-5 h-5 text-wellness-green" />
                                     <div>
                                         <p className="font-semibold text-gray-800">Email</p>
-                                        <a href="mailto:support@nhcservice.in" className="text-wellness-green hover:underline">
-                                            support@nhcservice.in
+                                        <a href="mailto:nhccycleharmony@gmail.com" className="text-wellness-green hover:underline">
+                                            nhccycleharmony@gmail.com
                                         </a>
                                     </div>
                                 </div>
@@ -275,7 +275,7 @@ export default function RefundPolicy() {
                                     <Phone className="w-5 h-5 text-wellness-green" />
                                     <div>
                                         <p className="font-semibold text-gray-800">Phone</p>
-                                        <p className="text-gray-700">+91 XXXXXXXXXX</p>
+                                        <p className="text-gray-700">+91 93471 22416</p>
                                     </div>
                                 </div>
                             </div>

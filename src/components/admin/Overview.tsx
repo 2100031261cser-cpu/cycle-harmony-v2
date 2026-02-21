@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 interface OverviewProps {
     stats: any;
     revenueData: any[];
+    products: any[];
     loading: boolean;
 }
 
-export function Overview({ stats, revenueData, loading }: OverviewProps) {
+export function Overview({ stats, revenueData, products, loading }: OverviewProps) {
     if (loading || !stats) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -84,6 +85,40 @@ export function Overview({ stats, revenueData, loading }: OverviewProps) {
                                 <div className="h-full flex items-center justify-center text-gray-400">
                                     No revenue data available for this month
                                 </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Inventory Status */}
+                <Card className="border-none shadow-xl rounded-xl overflow-hidden bg-white/80 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Package className="w-5 h-5 text-pink-500" />
+                            Inventory Status
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="divide-y divide-gray-100">
+                            {products.length === 0 ? (
+                                <div className="p-8 text-center text-gray-400">No product data</div>
+                            ) : (
+                                products.map((product: any) => (
+                                    <div key={product._id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-800">{product.name} Laddus</p>
+                                            <p className="text-xs text-gray-500">₹{product.price} / {product.unit}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={`text-sm font-bold ${product.stock < 20 ? 'text-red-500' : 'text-green-500'}`}>
+                                                {product.stock} left
+                                            </p>
+                                            {product.stock < 20 && (
+                                                <Badge variant="destructive" className="text-[10px] h-4">Low Stock</Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </CardContent>
