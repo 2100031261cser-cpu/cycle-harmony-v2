@@ -42,7 +42,7 @@ export function CTASection() {
       {/* Individual Product Blocks */}
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
         {/* Phase I Laddu */}
-        <div className="bg-yellow-100 rounded-3xl shadow-card p-8 text-center">
+        <div className="rounded-3xl p-8 text-center transition-all hover:scale-105">
           <img
             src={phase1LadduProduct}
             alt="Phase I Laddu"
@@ -64,7 +64,7 @@ export function CTASection() {
         </div>
 
         {/* Phase II Laddu */}
-        <div className="bg-pink-100 rounded-3xl shadow-card p-8 text-center">
+        <div className="rounded-3xl p-8 text-center transition-all hover:scale-105">
           <img
             src={phase2LadduProduct}
             alt="Phase II Laddu"
