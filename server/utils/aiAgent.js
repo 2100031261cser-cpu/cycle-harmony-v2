@@ -20,6 +20,12 @@ function getModel() {
 
 You can READ data and also PERFORM ACTIONS like changing order status, assigning delivery boys, and sending emails.
 
+CRITICAL - ADMINISTRATIVE AUTHORITY:
+- When the admin (the user) asks you to perform an action, DO IT IMMEDIATELY.
+- Do NOT hesitate or say you need a "database of delivery boys". If the user says "assign Ram", then newValue is "Ram".
+- Do NOT say you need a "mail template". The system has BUILT-IN templates that are triggered automatically.
+- Handle typos gracefully: If the user says "Assasin", they mean "Assign". If they say "sent the mail", use type: send_email.
+
 CRITICAL - ORDER ID RULES:
 - Each order has two IDs: "orderId" (like "A004A01") and "_id" (MongoDB internal ID)
 - ALWAYS display "orderId" (e.g. #A004A01) to the user - NEVER show MongoDB _id
@@ -43,7 +49,7 @@ RULES FOR ACTION BLOCK:
 2. The orderId should be the display orderId like A005A01 (NOT the MongoDB _id)
 3. The type must be one of: update_status, assign_delivery, send_email, update_stock, cancel_order
 4. Always include the customer name
-5. For assign_delivery, newValue should be the delivery boy's name
+5. For assign_delivery, newValue should be the delivery boy's name (e.g., Ram)
 
 EXAMPLES:
 
@@ -62,7 +68,7 @@ newValue: Shipped
 👤 Customer: anu
 🔄 Status: Processing ➜ *Shipped*
 
-User: "assign delivery boy Ram to anu's order"
+User: "Assasin the delivery boy ram to #A005A01 and also send the mail"
 ---ACTION---
 type: assign_delivery
 customer: anu
@@ -71,11 +77,17 @@ field: deliveryBoy
 oldValue: Not Assigned
 newValue: Ram
 ---END_ACTION---
+---ACTION---
+type: send_email
+customer: anu
+orderId: A005A01
+---END_ACTION---
 
 ✅ *Delivery Boy Assigned!*
 📦 *Order #A005A01*
 👤 Customer: anu
 🚚 Delivery Boy: *Ram*
+📧 *Email Queued!*
 
 VALID STATUS VALUES: Pending, Confirmed, Processing, Shipped, Delivered, Cancelled
 
@@ -536,29 +548,34 @@ async function getInitialContext(query) {
     const isYesterday = lowerQuery.includes('yesterday');
 
     const isAction = lowerQuery.includes('change') || lowerQuery.includes('update') || lowerQuery.includes('assign') ||
-        lowerQuery.includes('cancel') || lowerQuery.includes('send email') || lowerQuery.includes('deliver') ||
+        lowerQuery.includes('assasin') ||
+        lowerQuery.includes('cancel') || lowerQuery.includes('send') || lowerQuery.includes('deliver') ||
         lowerQuery.includes('status') || lowerQuery.includes('set');
 
     try {
         context.business_stats = await tools.get_stats();
 
-        // For actions, find the customer's orders
-        if (isAction) {
-            const words = query.split(/\s+/);
-            const skipWords = ['change', 'update', 'assign', 'cancel', 'send', 'email', 'status', 'set',
-                'the', 'for', 'to', 'order', 'orders', 'delivery', 'boy', 'of',
-                'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled',
-                'his', 'her', 'their', "'s", 'a', 'an'];
-            for (const word of words) {
-                const cleanWord = word.replace(/[^a-zA-Z]/g, '');
-                if (cleanWord.length > 2 && !skipWords.includes(cleanWord.toLowerCase())) {
-                    const orders = await tools.find_order_by_customer(cleanWord);
-                    if (orders && orders.length > 0) {
-                        context.matching_orders = orders;
-                        break;
-                    }
+        // ALWAYS check for order IDs or customer names mentioned in the query
+        const words = query.split(/\s+/);
+        for (const word of words) {
+            const cleanWord = word.trim().replace(/^#/, '').replace(/[.,!?;:]+$/, '');
+            if (cleanWord.length < 3) continue;
+
+            // Try finding directly by ID first (very fast)
+            const order = await findOrderFlexible(cleanWord);
+            if (order) {
+                if (!context.matching_orders) context.matching_orders = [];
+                // Avoid duplicates if same order mentioned twice
+                if (!context.matching_orders.find(o => o.orderId === order.orderId)) {
+                    context.matching_orders.push(order);
+                    console.log(`📊 Context: Found matching order ${order.orderId}`);
                 }
             }
+        }
+
+        // If no matching orders found by ID, try customer name search for actions
+        if (!context.matching_orders && isAction) {
+            // ... (keep search by name logic if needed, but the ID loop above is better)
         }
 
         if (lowerQuery.includes('customer') || lowerQuery.includes('who') || lowerQuery.includes('find') || lowerQuery.includes('recent')) {
