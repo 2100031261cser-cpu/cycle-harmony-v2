@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { processAiQuery } from './aiAgent.js';
 
 let lastUpdateId = 0;
@@ -37,18 +38,21 @@ function clearHistory(chatId) {
 export async function startTelegramListener() {
     const token = process.env.TELEGRAM_BOT_TOKEN;
     if (!token) {
-        console.warn('⚠️ TELEGRAM_BOT_TOKEN missing. AI Agent listener disabled.');
+        console.warn('⚠️ [TELEGRAM] TELEGRAM_BOT_TOKEN missing. AI Agent listener disabled.');
         return;
     }
 
-    console.log('🤖 Telegram AI Agent Listener Started...');
+    console.log('🤖 [TELEGRAM] AI Agent Listener Starting...');
+    console.log(`🤖 [TELEGRAM] Token: ${token.substring(0, 10)}... (length: ${token.length})`);
     pollTelegram(token);
 }
 
 async function pollTelegram(token) {
+    console.log('🤖 [TELEGRAM] Polling loop entered');
     while (true) {
         try {
-            const response = await fetch(`https://api.telegram.org/bot${token}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
+            const url = `https://api.telegram.org/bot${token}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`;
+            const response = await fetch(url);
             const data = await response.json();
 
             if (data.ok && data.result.length > 0) {
