@@ -90,6 +90,11 @@ orderId: A005A01
 📧 *Email Queued!*
 
 VALID STATUS VALUES: Pending, Confirmed, Processing, Shipped, Delivered, Cancelled
+ACTION TYPES: update_status, assign_delivery, send_email, update_stock, cancel_order, set_delivery_date
+
+FOR set_delivery_date:
+- newValue must be an ISO date string (YYYY-MM-DD).
+- Use the provided "CURRENT DATE AND TIME" to calculate "today", "tomorrow", etc.
 
 FORMATTING RULES:
 - Use Telegram Markdown: *bold* for labels
@@ -382,6 +387,26 @@ const actionTools = {
             console.error('Cancel order error:', err.message);
             return { success: false, error: err.message };
         }
+    },
+
+    set_delivery_date: async ({ orderId, newValue }) => {
+        try {
+            const order = await findOrderFlexible(orderId);
+            if (!order) return { success: false, error: `Order not found for: ${orderId}` };
+
+            const deliveryDate = new Date(newValue);
+            if (isNaN(deliveryDate.getTime())) {
+                return { success: false, error: `Invalid date format for delivery date: ${newValue}. Please use YYYY-MM-DD.` };
+            }
+
+            order.deliveryDate = deliveryDate;
+            await order.save();
+            console.log(`✅ DB UPDATED: Delivery date for ${order.fullName} (${order.orderId}) → ${newValue}`);
+            return { success: true, order };
+        } catch (err) {
+            console.error('Set delivery date error:', err.message);
+            return { success: false, error: err.message };
+        }
     }
 };
 
@@ -448,6 +473,8 @@ async function executeAction(action) {
             return await actionTools.update_stock({ productId: action.productId || searchId, newValue });
         case 'cancel_order':
             return await actionTools.cancel_order({ orderId: searchId });
+        case 'set_delivery_date':
+            return await actionTools.set_delivery_date({ orderId: searchId, newValue });
         default:
             return { success: false, error: `Unknown action type: ${type}` };
     }
