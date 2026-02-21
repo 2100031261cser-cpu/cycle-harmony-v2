@@ -11,6 +11,11 @@
 
 # SPA catch-all - MUST be last
 [[redirects]]
+  from = "/test-redirect"
+  to = "https://www.google.com"
+  status = 301
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
